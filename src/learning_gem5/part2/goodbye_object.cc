@@ -59,7 +59,7 @@ GoodbyeObject::processEvent()
 }
 
 void
-GoodbyeObject::sayGoodbye(std::string other_name)
+GoodbyeObject::sayGoodbye(std::string other_name)  // 1. sayGoodbye 是触发器。它设置了要写入的 message，并立即调用 fillBuffer() 开始第一次写入
 {
     DPRINTF(HelloExample, "Saying goodbye to %s\n", other_name);
 
@@ -88,12 +88,14 @@ GoodbyeObject::fillBuffer()
 
     if (bufferUsed < bufferSize - 1) {
         // Wait for the next copy for as long as it would have taken
+        // 未满：说明这个 message 已经完整复制进去了，但缓冲区还有空间，所以我们要 "再写一遍"，会调度下一次 event (它会再次调用 fillBuffer)
         DPRINTF(HelloExample, "Scheduling another fillBuffer in %d ticks\n",
                 bandwidth * bytes_copied);
         schedule(event, curTick() + bandwidth * bytes_copied);
     } else {
         DPRINTF(HelloExample, "Goodbye done copying!\n");
         // Be sure to take into account the time for the last bytes
+        // 已满：任务完成！调度 "退出仿真" 事件
         exitSimLoop(buffer, 0, curTick() + bandwidth * bytes_copied);
     }
 }

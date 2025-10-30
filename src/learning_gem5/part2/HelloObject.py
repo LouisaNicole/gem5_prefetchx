@@ -33,15 +33,16 @@ class HelloObject(SimObject):
     cxx_header = "learning_gem5/part2/hello_object.hh"
     cxx_class = "gem5::HelloObject"
 
-    time_to_wait = Param.Latency("Time before firing the event")
-    number_of_fires = Param.Int(
+    time_to_wait = Param.Latency("Time before firing the event")  # 每一次调用事件 processEvent 的时间间隔
+    number_of_fires = Param.Int(  # 调用事件 processEvent 的次数，然后就结束
         1, "Number of times to fire the event before goodbye"
     )
 
     goodbye_object = Param.GoodbyeObject("A goodbye object")
 
 
-class GoodbyeObject(SimObject):
+class GoodbyeObject(SimObject):  # 为硬件操作（如内存写入、网络发包）建立时间模型
+    # GoodbyeObject 是真正负责退出仿真的对象。它在 fillBuffer 的最后调用了 exitSimLoop()，这会使 m5.simulate() 返回，从而结束整个 Python 脚本
     type = "GoodbyeObject"
     cxx_header = "learning_gem5/part2/goodbye_object.hh"
     cxx_class = "gem5::GoodbyeObject"
@@ -52,3 +53,7 @@ class GoodbyeObject(SimObject):
     write_bandwidth = Param.MemoryBandwidth(
         "100MiB/s", "Bandwidth to fill the buffer"
     )
+
+# HelloObject 的事件（processEvent）按计划运行 5 次 。HelloObject::processEvent 不再调度自己（else 分支没有被执行） 。
+# 取而代之，它执行了 if 语句块中的代码：goodbye->sayGoodbye(myName); 这是一个普通的 C++ 函数调用，它“激活”了 GoodbyeObject 。
+# GoodbyeObject 的 sayGoodbye 函数启动了它自己的事件循环（即 fillBuffer 和 schedule(event, ...)）

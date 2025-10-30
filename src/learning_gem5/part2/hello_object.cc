@@ -43,7 +43,7 @@ HelloObject::HelloObject(const HelloObjectParams &params) :
     goodbye(params.goodbye_object),
     // Note: This is not needed as you can *always* reference this->name()
     myName(params.name),
-    latency(params.time_to_wait),
+    latency(params.time_to_wait),  // 每一次调用事件 processEvent 的时间间隔
     timesLeft(params.number_of_fires)
 {
     DPRINTF(HelloExample, "Created the hello object\n");
@@ -66,7 +66,7 @@ HelloObject::processEvent()
 
     if (timesLeft <= 0) {
         DPRINTF(HelloExample, "Done firing!\n");
-        goodbye->sayGoodbye(myName);
+        goodbye->sayGoodbye(myName);  // sayGoodbye 是触发器。它设置了要写入的 message，并立即调用 fillBuffer() 开始第一次写入
     } else {
         schedule(event, curTick() + latency);
     }

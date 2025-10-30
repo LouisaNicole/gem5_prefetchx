@@ -43,7 +43,7 @@ from m5.objects import *
 root = Root(full_system=False)
 
 # Create an instantiation of the simobject you created
-root.hello = HelloObject(time_to_wait="2us", number_of_fires=5)
+root.hello = HelloObject(time_to_wait="1us", number_of_fires=3)
 root.hello.goodbye_object = GoodbyeObject(buffer_size="100B")
 
 # instantiate all of the objects we've created above
