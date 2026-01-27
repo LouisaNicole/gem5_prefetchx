@@ -727,3 +727,30 @@ class PIFPrefetcher(QueuedPrefetcher):
         self.addEvent(
             HWPProbeEventRetiredInsts(self, simObj, "RetiredInstsPC")
         )
+        
+class XptPrefetcher(QueuedPrefetcher):
+    type = 'XptPrefetcher'
+    cxx_class = 'gem5::prefetch::XptPrefetcher'
+    cxx_header = "mem/cache/prefetch/XptPrefetcher.hh"
+
+    # --- 基础配置 ---
+    latency = 1
+    queue_size = 32
+    # XPT 主要针对数据流，不建议开启指令预取
+    on_inst = False  
+    # 论文指出 XPT 使用物理页地址索引
+    use_virtual_addresses = False 
+
+    # --- 论文中的 XPT 核心参数 ---
+    # 总条目数：256
+    num_entries = Param.Int(256, "Total number of XPT entries")
+    # 激活阈值：32 次 LLC 未命中后启动预取
+    activation_threshold = Param.Int(32, "LLC miss threshold to activate prefetcher")
+
+    # --- 实验与防御开关 ---
+    # 设置为 False 时是原始 XPT (Baseline)，用于复现 PREFETCHX 攻击
+    # 设置为 True 时开启 XPTGuard 防御
+    enable_defense = Param.Bool(False, "Set to True to enable XPTGuard defense")
+    
+    # 防御模式选择：True 为全局概率替换 (vGLO), False 为同ID概率替换 (vID)
+    is_vGLO = Param.Bool(True, "Defense mode: True for vGLO, False for vID")
