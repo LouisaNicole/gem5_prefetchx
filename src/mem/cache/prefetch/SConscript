@@ -58,3 +58,4 @@ Source('stride.cc')
 Source('tagged.cc')
 # 添加 XptPrefetcher
 Source('XptPrefetcher.cc')
+DebugFlag('XPTDebug')

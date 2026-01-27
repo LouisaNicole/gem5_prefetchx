@@ -7,14 +7,20 @@ system.clk_domain = SrcClockDomain(clock='3GHz', voltage_domain=VoltageDomain())
 system.mem_mode = 'timing'
 system.mem_ranges = [AddrRange('2GB')]
 
-# 1. 核心与总线配置 
-system.cpu = [X86TimingSimpleCPU(cpu_id=i) for i in range(2)]
+# # 1. 核心与总线配置 
+# system.cpu = [X86TimingSimpleCPU(cpu_id=i) for i in range(2)]
+# system.membus = SystemXBar()
+# system.l3bus = L2XBar()
+
+# 1. 配置为单核心（方便观察单进程实验结果）
+# 修改点：将 range(2) 改为 range(1)
+system.cpu = [X86TimingSimpleCPU(cpu_id=i) for i in range(1)] 
 system.membus = SystemXBar()
 system.l3bus = L2XBar()
 
 # 2. 共享 L3 缓存 (LLC) 与 XPT 预取器 
 system.l3cache = Cache(size='2MB', assoc=16, 
-                       tag_latency=20, data_latency=20, response_latency=20,
+                       tag_latency=50, data_latency=50, response_latency=50,
                        mshrs=20, tgts_per_mshr=12)
 
 # system.l3cache = Cache(size='128kB', assoc=2, 
@@ -23,7 +29,9 @@ system.l3cache = Cache(size='2MB', assoc=16,
 
 system.l3cache.prefetcher = XptPrefetcher(
     num_entries = 256,         # XPT 容量 
-    activation_threshold = 32, # 激活阈值 
+    # activation_threshold = 32, # 激活阈值 
+    # 理由：让预取器在单次 Miss 后立即记录，极大加速实验成果的呈现
+    activation_threshold = 1,
 )
 
 system.l3cache.prefetcher.enable_defense = False  # 攻击 baseline
@@ -76,24 +84,34 @@ system.l3cache.cpu_side = system.l3bus.mem_side_ports
 system.l3cache.mem_side = system.membus.cpu_side_ports
 
 # 5. 内存与工作负载 
-system.mem_ctrl = MemCtrl(dram=DDR4_2400_8x8(range=system.mem_ranges[0]))
+system.mem_ctrl = MemCtrl(dram=DDR4_2400_8x8(range=system.mem_ranges[0], tCL='25ns', tRP='25ns', tRCD='25ns'))
 system.mem_ctrl.port = system.membus.mem_side_ports
 system.system_port = system.membus.cpu_side_ports
 
-binary_a = './attacker'
-binary_v = './victim'
+# binary_a = './attacker'
+# binary_v = './victim'
 
-system.workload = SEWorkload.init_compatible(binary_a)
+# system.workload = SEWorkload.init_compatible(binary_a)
 
-# 显式指定 PID 以彻底解决冲突问题 
-# 在 m5.instantiate() 之前修改
-# 显式给攻击者更多的指令额度或先运行
-system.cpu[0].max_insts_any_thread = 100000000 # 确保攻击者能跑完
-system.cpu[0].workload = Process(executable=binary_a, cmd=[binary_a], pid=100)
-system.cpu[1].workload = Process(executable=binary_v, cmd=[binary_v], pid=200)
+# # 显式指定 PID 以彻底解决冲突问题 
+# # 在 m5.instantiate() 之前修改
+# # 显式给攻击者更多的指令额度或先运行
+# system.cpu[0].max_insts_any_thread = 100000000 # 确保攻击者能跑完
+# system.cpu[0].workload = Process(executable=binary_a, cmd=[binary_a], pid=100)
+# system.cpu[1].workload = Process(executable=binary_v, cmd=[binary_v], pid=200)
 
-for cpu in system.cpu:
-    cpu.createThreads()
+# for cpu in system.cpu:
+#     cpu.createThreads()
+
+# 修改点：目标程序改为你刚刚编译的单进程 test
+# binary = './time_test'
+binary = './test'
+system.workload = SEWorkload.init_compatible(binary)
+
+# 修改点：只给核心 0 分配 workload
+process = Process(executable=binary, cmd=[binary], pid=100)
+system.cpu[0].workload = process
+system.cpu[0].createThreads()
 
 root = Root(full_system=False, system=system)
 m5.instantiate()
