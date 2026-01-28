@@ -1,58 +1,53 @@
+// 编译: gcc -O0 -static test.c -o test
+// 运行: ./build/X86/gem5.opt --debug-flags=XPTDebug ... > log.txt
+
+#define _GNU_SOURCE
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
+#include <unistd.h>
+#include <x86intrin.h> 
 
-#define XPT_SIZE 256
-#define EVICT_SIZE (64 * 1024)
-uint8_t memory[2048 * 4096] __attribute__((aligned(4096)));
-uint8_t evict_set[EVICT_SIZE] __attribute__((aligned(4096)));
-
-static inline uint64_t rdtsc_measure(uint8_t *addr, int clean_cache) {
-    volatile uint8_t junk;
-    uint64_t start, end;
-    uint32_t lo, hi;
-
-    // 如果需要测 Miss/XPT，就清理 L1/L2；如果测 LLC Hit，就不清理
-    if (clean_cache) {
-        for (int i = 0; i < EVICT_SIZE; i += 64) junk = evict_set[i];
-    }
-    
-    __asm__ volatile("mfence; lfence");
-    __asm__ volatile("rdtsc" : "=a"(lo), "=d"(hi));
-    start = ((uint64_t)hi << 32) | lo;
-
-    junk = *addr; 
-
-    __asm__ volatile("rdtscp" : "=a"(lo), "=d"(hi));
-    end = ((uint64_t)hi << 32) | lo;
-    return end - start;
-}
+uint8_t memory[64 * 1024 * 1024]; 
+static volatile uint8_t global_junk;
 
 int main() {
-    memset(memory, 0, sizeof(memory));
-    memset(evict_set, 1, sizeof(evict_set));
+    // 1. 预热 (这里会产生大量日志，包括你看到的那个 ENABLED，但那是假象！)
+    printf("Pre-heating...\n");
+    for (int i = 0; i < 64 * 1024 * 1024; i += 4096) memory[i] = 1; 
 
-    volatile uint8_t junk;
-    // --- 状态 1: LLC 命中 (LLC Hit) ---
-    // 先访问一次让它进缓存，且不清理 L1/L2 测量
-    junk = memory[100 * 4096]; 
-    uint64_t lat_llc_hit = rdtsc_measure(&memory[100 * 4096], 0);
+    // =======================================================
+    // 2. 这里的 MARKER 是分界线！
+    // =======================================================
+    // 只有在这个标记之后出现的 ENABLED，才是真正的成功！
+    
+    // 先 Flush 确保 Marker 能穿透
+    _mm_clflush(&memory[4096]); 
+    __asm__ volatile("mfence; lfence");
 
-    // --- 状态 2: 优化型未命中 (XPT Hit/Enabled) ---
-    // 训练 Page 0
-    for (int i = 0; i < 40; i++) memory[0] = i; 
-    uint64_t lat_xpt_hit = rdtsc_measure(&memory[0], 1);
+    printf("\n\n");
+    printf("====================================================\n");
+    printf("=== REAL ATTACK STARTS HERE (IGNORE LOGS ABOVE) ====\n");
+    printf("====================================================\n");
+    
+    // 访问 Marker (Page 1)，在日志里留个记号
+    global_junk = memory[4096]; 
 
-    // --- 状态 3: 完全未命中 (LLC Miss / XPT Miss) ---
-    // 训练后被驱逐，或者直接测从未访问过的页
-    uint64_t lat_llc_miss = rdtsc_measure(&memory[500 * 4096], 1);
-
-    printf("\n论文指标对齐报告:\n");
-    printf("--------------------------------------------------\n");
-    printf("1. LLC 命中 (LLC Hit):       %lu 周期 (预期 <160)\n", lat_llc_hit);
-    printf("2. 优化型未命中 (XPT Enabled): %lu 周期 (预期 170-330)\n", lat_xpt_hit);
-    printf("3. 完全未命中 (LLC Miss):    %lu 周期 (预期 >350)\n", lat_llc_miss);
-    printf("--------------------------------------------------\n");
+    // 3. 真正开始训练 Page 0
+    // 我们要把它从“被驱逐”的状态救回来
+    // 加大药量到 200 次！
+    for (int i = 0; i < 200; i++) {
+        global_junk = memory[0];
+        __asm__ volatile("mfence");
+        _mm_clflush(&memory[0]);
+        __asm__ volatile("mfence; lfence");
+        
+        // 简单的延时，防止合并
+        for(int k=0; k<1000; k++) __asm__ volatile("nop");
+    }
+    
+    // 4. Probe
+    // ... (你的 Probe 代码)
     
     return 0;
 }
