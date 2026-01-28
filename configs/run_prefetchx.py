@@ -29,9 +29,9 @@ system.l3cache = Cache(size='2MB', assoc=16,
 
 system.l3cache.prefetcher = XptPrefetcher(
     num_entries = 256,         # XPT 容量 
-    # activation_threshold = 32, # 激活阈值 
+    activation_threshold = 32, # 激活阈值 
     # 理由：让预取器在单次 Miss 后立即记录，极大加速实验成果的呈现
-    activation_threshold = 1,
+    # activation_threshold = 1,
 )
 
 system.l3cache.prefetcher.enable_defense = False  # 攻击 baseline
