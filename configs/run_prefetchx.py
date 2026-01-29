@@ -15,13 +15,14 @@ system.mem_ranges = [AddrRange('2GB')]
 # 1. 配置为单核心（方便观察单进程实验结果）
 # 修改点：将 range(2) 改为 range(1)
 system.cpu = [X86TimingSimpleCPU(cpu_id=i) for i in range(1)] 
-system.membus = SystemXBar()
-system.l3bus = L2XBar()
+system.membus = SystemXBar(clk_domain=system.clk_domain)
+system.l3bus = L2XBar(clk_domain=system.clk_domain)
 
 # 2. 共享 L3 缓存 (LLC) 与 XPT 预取器 
 system.l3cache = Cache(size='2MB', assoc=16, 
-                       tag_latency=50, data_latency=50, response_latency=50,
-                       mshrs=20, tgts_per_mshr=12)
+                       tag_latency=50, data_latency=20, response_latency=20,
+                       sequential_access=True,
+                       mshrs=16, tgts_per_mshr=12)
 
 # system.l3cache = Cache(size='128kB', assoc=2, 
 #                        tag_latency=20, data_latency=20, response_latency=20,
@@ -29,7 +30,7 @@ system.l3cache = Cache(size='2MB', assoc=16,
 
 system.l3cache.prefetcher = XptPrefetcher(
     num_entries = 256,         # XPT 容量 
-    activation_threshold = 32, # 激活阈值 
+    activation_threshold = 32  # 激活阈值 
     # 理由：让预取器在单次 Miss 后立即记录，极大加速实验成果的呈现
     # activation_threshold = 1,
 )
@@ -57,7 +58,7 @@ for i, cpu in enumerate(system.cpu):
                        response_latency=10,   # 修复点：添加响应延迟
                        mshrs=20, 
                        tgts_per_mshr=12)
-    cpu.l2bus = L2XBar()
+    cpu.l2bus = L2XBar(clk_domain=system.clk_domain)
 
     # 关键连接 CPU -> L1
     cpu.icache_port = cpu.icache.cpu_side

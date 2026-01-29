@@ -1,53 +1,79 @@
-// 编译: gcc -O0 -static test.c -o test
-// 运行: ./build/X86/gem5.opt --debug-flags=XPTDebug ... > log.txt
-
-#define _GNU_SOURCE
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
-#include <unistd.h>
-#include <x86intrin.h> 
+#include <stdlib.h>
+#include <x86intrin.h>
 
-uint8_t memory[64 * 1024 * 1024]; 
-static volatile uint8_t global_junk;
+#define PAGE_SIZE 4096
+#define TRAIN_THRESHOLD 32  // 回归论文 32 次标准阈值
+
+// 强制刷新缓存
+void clflush(volatile void *p) {
+    asm volatile("clflush (%0)" :: "r"(p));
+}
+
+// 精确测量计时函数
+uint64_t measure_access_latency(volatile char *ptr) {
+    uint64_t start, end;
+    unsigned int junk;
+    asm volatile("mfence");
+    start = __rdtscp(&junk);
+    // 产生实际读取动作，制造数据依赖
+    asm volatile("movb (%1), %%al" : "=a"(junk) : "r"(ptr));
+    asm volatile("mfence");
+    end = __rdtscp(&junk);
+    return end - start;
+}
 
 int main() {
-    // 1. 预热 (这里会产生大量日志，包括你看到的那个 ENABLED，但那是假象！)
-    printf("Pre-heating...\n");
-    for (int i = 0; i < 64 * 1024 * 1024; i += 4096) memory[i] = 1; 
+    // 分配大块内存
+    size_t size = 20 * PAGE_SIZE;
+    char *buffer = (char *)aligned_alloc(PAGE_SIZE, size);
 
-    // =======================================================
-    // 2. 这里的 MARKER 是分界线！
-    // =======================================================
-    // 只有在这个标记之后出现的 ENABLED，才是真正的成功！
-    
-    // 先 Flush 确保 Marker 能穿透
-    _mm_clflush(&memory[4096]); 
-    __asm__ volatile("mfence; lfence");
+    // 【核心改进】：点射式初始化，杜绝 memset
+    // 我们只初始化每个页面的第 0 个字节。每个页面初始计数仅为 1。
+    volatile char *p_hit  = &buffer[PAGE_SIZE * 1]; 
+    volatile char *p_dram = &buffer[PAGE_SIZE * 5]; 
+    volatile char *p_xpt  = &buffer[PAGE_SIZE * 9]; 
 
-    printf("\n\n");
-    printf("====================================================\n");
-    printf("=== REAL ATTACK STARTS HERE (IGNORE LOGS ABOVE) ====\n");
-    printf("====================================================\n");
-    
-    // 访问 Marker (Page 1)，在日志里留个记号
-    global_junk = memory[4096]; 
+    *p_hit  = 0x40;
+    *p_dram = 0x41;
+    *p_xpt  = 0x42;
 
-    // 3. 真正开始训练 Page 0
-    // 我们要把它从“被驱逐”的状态救回来
-    // 加大药量到 200 次！
-    for (int i = 0; i < 200; i++) {
-        global_junk = memory[0];
-        __asm__ volatile("mfence");
-        _mm_clflush(&memory[0]);
-        __asm__ volatile("mfence; lfence");
-        
-        // 简单的延时，防止合并
-        for(int k=0; k<1000; k++) __asm__ volatile("nop");
+    printf("[*] Standard Threshold: %d\n", TRAIN_THRESHOLD);
+    printf("[*] Addresses: Hit=%p, DRAM=%p, XPT=%p\n", p_hit, p_dram, p_xpt);
+
+    // --- 1. 测量 LLC Hit ---
+    volatile char dummy = *p_hit; // 载入缓存
+    asm volatile("mfence");
+    uint64_t t_hit = measure_access_latency(p_hit);
+
+    // --- 2. 测量 DRAM Miss (此时 p_dram 访问计数为 1, 低于 32, 必交税) ---
+    clflush(p_dram);
+    asm volatile("mfence");
+    uint64_t t_dram = measure_access_latency(p_dram);
+
+    // --- 3. 训练 XPT (训练 50 次，稳稳超过 32) ---
+    printf("[*] Training XPT for Page %p...\n", (void*)((uintptr_t)p_xpt & ~0xFFF));
+    for (int i = 0; i < 50; i++) {
+        volatile char junk = *p_xpt;
+        clflush(p_xpt);
+        asm volatile("mfence");
     }
-    
-    // 4. Probe
-    // ... (你的 Probe 代码)
-    
+
+    // 给 DRAM 控制器冷却时间，确保之前的训练写回不会干扰测量
+    for(volatile int i=0; i<2000000; i++);
+
+    // --- 4. 测量 XPT Hit (已激活，免税路径) ---
+    clflush(p_xpt);
+    asm volatile("mfence");
+    uint64_t t_xpt = measure_access_latency(p_xpt);
+
+    printf("\n--- Final Academic Results ---\n");
+    printf("LLC Hit (Baseline)  : %lu cycles\n", t_hit);
+    printf("XPT Hit (Optimized) : %lu cycles\n", t_xpt);
+    printf("DRAM Miss (Taxed)   : %lu cycles\n", t_dram);
+    printf("------------------------------\n");
+    printf("Attacker Signal Gap : %ld cycles\n", (long)t_dram - (long)t_xpt);
+
     return 0;
 }

