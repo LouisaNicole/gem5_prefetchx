@@ -1,6 +1,6 @@
 #include "mem/cache/prefetch/XptPrefetcher.hh"
 #include "base/random.hh" 
-#include "debug/XPTDebug.hh"
+#include "debug/HWPrefetch.hh" // 使用标准 Debug Flag
 
 namespace gem5
 {
@@ -17,17 +17,28 @@ XptPrefetcher::XptPrefetcher(const XptPrefetcherParams &p)
     table.reserve(numEntries);
 }
 
-void 
-XptPrefetcher::calculatePrefetch(const PrefetchInfo &pfi, 
+bool XptPrefetcher::isXptOptimizedHit(Addr addr) const
+{
+    Addr page_addr = addr & ~0xFFF;
+    for (const auto& entry : table) {
+        // 必须是物理页匹配，且已经过了 32 次训练（enabled == true）
+        if (entry.paddr == page_addr && entry.enabled) {
+            return true; 
+        }
+    }
+    return false;
+}
+
+void XptPrefetcher::calculatePrefetch(const PrefetchInfo &pfi, 
                                  std::vector<AddrPriority> &addresses,
                                  const CacheAccessor &cache) 
 {
-    // 1. 获取基础信息
+    // 1. 获取物理页地址 (4KB 对齐)
     Addr page_addr = pfi.getAddr() & ~0xFFF;
-    Addr pc = pfi.hasPC() ? pfi.getPC() : (pfi.getAddr() >> 6); 
     
-    // 模拟 ASID/CoreID
-    uint32_t simulated_id = (uint32_t)((pc >> 12) ^ (pc & 0xFFF));
+    // 简单模拟 ID：在 SE 模式下很难获取真实 ASID，这里用 PC 模拟
+    Addr pc = pfi.hasPC() ? pfi.getPC() : 0;
+    uint32_t simulated_id = (uint32_t)((pc >> 12) ^ (pc & 0xFF));
     uint32_t asid = simulated_id; 
     uint32_t core_id = simulated_id; 
 
@@ -35,26 +46,33 @@ XptPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     int idx = findEntry(page_addr);
 
     if (idx != -1) {
-        // --- 命中 XPT 条目 ---
-        DPRINTF(XPTDebug, "XPT Lookup HIT: PageAddr=%#x, Enabled=%d, MissCounter=%d\n", 
-                page_addr, table[idx].enabled, table[idx].missCounter);
-        
+        // --- XPT HIT ---
+        // 更新 LRU 时间戳
         table[idx].lastAccess = curTick(); 
+        
+        DPRINTF(HWPrefetch, "XPT HIT: Page=%#x, Cnt=%d, En=%d\n", 
+                page_addr, table[idx].missCounter, table[idx].enabled);
+
         if (table[idx].enabled) {
-            DPRINTF(XPTDebug, "XPT ACTION: Issuing prefetch for Addr=%#x\n", pfi.getAddr() + 64);
-            addresses.push_back(AddrPriority(pfi.getAddr() + 64, 0));
+            // 已激活：发出预取请求 (模拟 Optimized LLC Miss)
+            // 预取下一行 (Current + 64)
+            // Addr pf_addr = pfi.getAddr() + 64;
+            // 检查跨页
+            // if ((pf_addr & ~0xFFF) == page_addr) {
+            //     addresses.push_back(AddrPriority(pf_addr, 0));
+            //     DPRINTF(HWPrefetch, "XPT PREFETCH: Issuing %#x\n", pf_addr);
+            // }
         } else {
+            // 未激活：训练阶段
             table[idx].missCounter++;
-            DPRINTF(XPTDebug, "XPT TRAINING: PageAddr=%#x missCounter=%d/%d\n", 
-                    page_addr, table[idx].missCounter, threshold);
             if (table[idx].missCounter >= threshold) {
                 table[idx].enabled = true;
-                DPRINTF(XPTDebug, "XPT STATUS: PageAddr=%#x is now ENABLED\n", page_addr);
+                DPRINTF(HWPrefetch, "XPT ACTIVATE: Page=%#x now enabled\n", page_addr);
             }
         }
     } else {
-        // --- 未命中 XPT：执行插入逻辑 ---
-        DPRINTF(XPTDebug, "XPT Lookup MISS: PageAddr=%#x, initiating insert.\n", page_addr);
+        // --- XPT MISS: 插入新条目 ---
+        DPRINTF(HWPrefetch, "XPT MISS: Page=%#x, Inserting...\n", page_addr);
         if (enableDefense) {
             performXPTGuard(page_addr, asid, core_id);
         } else {
@@ -64,63 +82,41 @@ XptPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void XptPrefetcher::performBaselineInsert(Addr page_addr, uint32_t asid, uint32_t core_id) {
+    // 只有表满时才驱逐
     if (table.size() >= (size_t)numEntries) {
         int victim = 0;
+        // 寻找 lastAccess 最小的 (最旧的)
         for (int i = 1; i < (int)table.size(); i++) {
-            if (table[i].lastAccess < table[victim].lastAccess) victim = i;
+            if (table[i].lastAccess < table[victim].lastAccess) {
+                victim = i;
+            }
         }
         
-        // 关键 Debug：谁被驱逐了
-        DPRINTF(XPTDebug, "XPT EVICT (Baseline): Removing %#x to make room for %#x\n", 
-                table[victim].paddr, page_addr);
-        
+        DPRINTF(HWPrefetch, "XPT EVICT: Removing Page=%#x (LRU)\n", table[victim].paddr);
         table.erase(table.begin() + victim);
     }
-    DPRINTF(XPTDebug, "XPT INSERT: PageAddr=%#x\n", page_addr);
-    table.push_back({page_addr, asid, core_id, 1, curTick(), false});
+    
+    // 插入新条目，计数器初始化为 1
+    XptEntry new_entry;
+    new_entry.paddr = page_addr;
+    new_entry.asid = asid;
+    new_entry.coreId = core_id;
+    new_entry.missCounter = 1;
+    new_entry.lastAccess = curTick();
+    new_entry.enabled = false;
+    
+    table.push_back(new_entry);
 }
 
 void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core_id) {
-    double c = (double)table.size();
-    double n = (double)numEntries;
-
-    static std::mt19937 gen(std::random_device{}()); 
-    std::uniform_real_distribution<double> dis(0.0, 1.0);
-    double rand_val = dis(gen); 
-
-    if (c > 0 && rand_val <= (c / n)) {
-        int victim = -1;
-        Tick oldest = curTick();
-
-        if (!isVGLO) { // vID 模式
-            for (int i = 0; i < (int)table.size(); i++) {
-                if (table[i].asid == asid && table[i].coreId == core_id) {
-                    if (table[i].lastAccess < oldest) { oldest = table[i].lastAccess; victim = i; }
-                }
-            }
-        }
-        
-        if (victim == -1) { 
-            for (int i = 0; i < (int)table.size(); i++) {
-                if (table[i].lastAccess < oldest) { oldest = table[i].lastAccess; victim = i; }
-            }
-        }
-        
-        if (victim != -1) {
-            DPRINTF(XPTDebug, "XPT EVICT (Guard): Removing %#x due to random eviction\n", table[victim].paddr);
-            table.erase(table.begin() + victim);
-        }
-    } else if (table.size() >= (size_t)numEntries) {
-        DPRINTF(XPTDebug, "XPT EVICT (Guard): Table full, removing head for %#x\n", page_addr);
-        table.erase(table.begin()); 
-    }
-    
-    DPRINTF(XPTDebug, "XPT INSERT (Guard): PageAddr=%#x\n", page_addr);
-    table.push_back({page_addr, asid, core_id, 1, curTick(), false});
+    // 简化的 Guard 逻辑，为了攻击复现，这里暂时保持简单
+    performBaselineInsert(page_addr, asid, core_id);
 }
 
 int XptPrefetcher::findEntry(Addr p) {
-    for (int i = 0; i < (int)table.size(); i++) if (table[i].paddr == p) return i;
+    for (int i = 0; i < (int)table.size(); i++) {
+        if (table[i].paddr == p) return i;
+    }
     return -1;
 }
 

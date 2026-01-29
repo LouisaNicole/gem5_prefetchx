@@ -63,6 +63,7 @@
 #include "params/BaseCache.hh"
 #include "params/WriteAllocator.hh"
 #include "sim/cur_tick.hh"
+#include "mem/cache/prefetch/XptPrefetcher.hh"
 
 namespace gem5
 {
@@ -316,6 +317,25 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                                    pkt->getBlockAddr(blkSize));
     }
 
+    // // ===================================================================
+    // // --- XPT 物理延迟注入开始 ---
+    // // ===================================================================
+    // // 我们在这里重新计算一次物理传导延迟。
+    // // 如果不是 XPT 命中，我们强行让 forward_time 增加 50 周期。
+    // if (pkt && pkt->isRead()) {
+    //     auto xpt = dynamic_cast<gem5::prefetch::XptPrefetcher*>(prefetcher);
+    //     if (xpt && xpt->isXptOptimizedHit(pkt->getAddr())) {
+    //         // XPT 命中：保持 forward_time 不变（已经足够快了）
+    //         // DPRINTF(HWPrefetch, "XPT PHYSICAL FORWARD: Addr %#x bypassing lookup tax\n", pkt->getAddr());
+    //     } else {
+    //         // 普通 Miss：强制增加 lookupLatency (50 周期) 的 Tick 数
+    //         forward_time += cyclesToTicks(lookupLatency);
+    //         // DPRINTF(HWPrefetch, "NO XPT normal miss lookupLatency: %d\n", lookupLatency);
+    //         // DPRINTF(HWPrefetch, "NO XPT PHYSICAL FORWARD: Addr %#x bypassing lookup tax\n", pkt->getAddr());
+    //     }
+    // }
+    // // ===================================================================
+
     if (mshr) {
         /// MSHR hit
         /// @note writebacks will be checked in getNextMSHR()
@@ -445,9 +465,55 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     // The latency charged is just the value set by the access() function.
     // In case of a hit we are neglecting response latency.
     // In case of a miss we are neglecting forward latency.
-    Tick request_time = clockEdge(lat);
+    
+    // Tick request_time = clockEdge(lat);
+    
     // Here we reset the timing of the packet.
     pkt->headerDelay = pkt->payloadDelay = 0;
+
+    
+    // ===================================================================
+    // --- XPT 终极物理干预开始 ---
+    // ===================================================================
+    // 我们在 access 执行完后，立即在这里强制修正 lat
+    if (!satisfied && pkt->isRead()) { // 确认是 LLC Miss 请求
+        auto xpt = dynamic_cast<gem5::prefetch::XptPrefetcher*>(prefetcher);
+        
+        // // 获取虚拟地址 (Vaddr) 和 物理地址 (Paddr)
+        // Addr vaddr = pkt->req->hasVaddr() ? pkt->req->getVaddr() : 0;
+        // Addr paddr = pkt->getAddr();
+        // bool hit = (xpt && xpt->isXptOptimizedHit(pkt->getAddr()));
+        // // 强力打印对比
+        // std::cerr << "[ADDR_MAP] Vaddr: 0x" << std::hex << vaddr 
+        //         << " | Paddr: 0x" << paddr 
+        //         << " | Page: 0x" << (paddr & ~0xFFF)
+        //         << " | XPT_HIT: " << (hit ? "YES" : "NO") << std::endl;
+        // // 强力打印：物理页地址 | 是否命中 XPT | 最终延迟
+        // std::cerr << "[BYPASS_CHECK] Addr: 0x" << std::hex << pkt->getAddr() 
+        //         << " | Page: 0x" << (pkt->getAddr() & ~0xFFF)
+        //         << " | XPT_HIT: " << (hit ? "YES" : "NO")
+        //         << " | Final_Lat: " << std::dec << (hit ? 0 : 50) << std::endl;
+
+        if (xpt && xpt->isXptOptimizedHit(pkt->getAddr())) {
+            // --- 场景 A: XPT 命中 (物理绕过) ---
+            // 强行将 lat 设为 0。
+            // 这意味着 request_time 也会是 0，Packet 会立即进入 Miss 处理流程
+            lat = Cycles(0); 
+            // DPRINTF(HWPrefetch, "XPT BYPASS: Address %#x skipping lookup latency\n", pkt->getAddr());
+            // DPRINTF(HWPrefetch, "ADD XPT: Access Latency: %d cycles\n", lat);
+        } else {
+            // --- 场景 B: 普通 DRAM Miss (支付查找税) ---
+            // 强行将 lat 设为配置的 lookupLatency (50)
+            // 这意味着这个 Packet 必须在 L3 停留 50 周期后才能发往 DRAM
+            lat = lookupLatency;
+            forward_time += cyclesToTicks(lookupLatency);
+            // pkt->headerDelay += cyclesToTicks(lookupLatency);
+            // DPRINTF(HWPrefetch, "NO XPT: Access Latency: %d cycles\n", lat);
+        }
+    }
+    Tick request_time = clockEdge(lat);
+
+    // ===================================================================
 
     if (satisfied) {
         // notify before anything else as later handleTimingReqHit might turn
@@ -1499,6 +1565,26 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     incMissCount(pkt);
 
     lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
+
+    // // ===================================================================
+    // // --- XPT 侵入式修改开始 ---
+    // // ===================================================================
+    // // --- 拦截点: XPT 物理绕过 (LLC Miss) ---
+    // auto xpt = dynamic_cast<gem5::prefetch::XptPrefetcher*>(prefetcher);
+    // if (pkt->isRead() && xpt && xpt->isXptOptimizedHit(pkt->getAddr())) {
+    //     // 1. 物理退税：修正 lat
+    //     lat = Cycles(1); 
+    //     pkt->headerDelay = 0; // 彻底物理加速，立即发往 DRAM
+    //     // DPRINTF(HWPrefetch, "XPT BYPASS: Address %#x skipping lookup latency\n", pkt->getAddr());
+    //     // DPRINTF(HWPrefetch, "ADD XPT: Access Latency: %d cycles\n", lat);
+    // }
+    // else { // 普通 LLC Miss
+    //     lat = Cycles(50); 
+    //     pkt->headerDelay += cyclesToTicks(Cycles(50));
+    // }
+    // // ===================================================================
+    // // --- XPT 侵入式修改结束 ---
+    // // ===================================================================  
 
     if (!blk && pkt->isLLSC() && pkt->isWrite()) {
         // complete miss on store conditional... just give up now
