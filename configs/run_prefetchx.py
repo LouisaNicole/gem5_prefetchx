@@ -20,7 +20,7 @@ system.l3bus = L2XBar(clk_domain=system.clk_domain)
 
 # 2. 共享 L3 缓存 (LLC) 与 XPT 预取器 
 system.l3cache = Cache(size='2MB', assoc=16, 
-                       tag_latency=50, data_latency=20, response_latency=20,
+                       tag_latency=80, data_latency=20, response_latency=20,
                        sequential_access=True,
                        mshrs=16, tgts_per_mshr=12)
 
