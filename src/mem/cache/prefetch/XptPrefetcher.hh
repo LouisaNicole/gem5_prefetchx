@@ -26,6 +26,7 @@ class XptPrefetcher : public Queued
     const int threshold;
     const bool enableDefense;
     const bool isVGLO;
+    uint32_t current_asid = 0;
     
     std::vector<XptEntry> table;
 
@@ -43,7 +44,10 @@ class XptPrefetcher : public Queued
     void calculatePrefetch(const PrefetchInfo &pfi, 
                            std::vector<AddrPriority> &addresses,
                            const CacheAccessor &cache) override;
+
+    void notify(const CacheAccessProbeArg &acc, const PrefetchInfo &pfi) override;
 };
+
 
 } // namespace prefetch
 } // namespace gem5
