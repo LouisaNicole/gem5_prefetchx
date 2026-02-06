@@ -35,12 +35,6 @@ void XptPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 {
     // 1. 获取物理页地址 (4KB 对齐)
     Addr page_addr = pfi.getAddr() & ~0xFFF;
-    
-    // 简单模拟 ID：在 SE 模式下很难获取真实 ASID，这里用 PC 模拟
-    Addr pc = pfi.hasPC() ? pfi.getPC() : 0;
-    uint32_t simulated_id = (uint32_t)((pc >> 12) ^ (pc & 0xFF));
-    uint32_t asid = simulated_id; 
-    uint32_t core_id = simulated_id; 
 
     // 2. 查找是否存在条目
     int idx = findEntry(page_addr);
@@ -74,9 +68,9 @@ void XptPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
         // --- XPT MISS: 插入新条目 ---
         DPRINTF(HWPrefetch, "XPT MISS: Page=%#x, Inserting...\n", page_addr);
         if (enableDefense) {
-            performXPTGuard(page_addr, asid, core_id);
+            performXPTGuard(page_addr, current_asid, 0);
         } else {
-            performBaselineInsert(page_addr, asid, core_id);
+            performBaselineInsert(page_addr, current_asid, 0);
         }
     }
 }
@@ -109,8 +103,45 @@ void XptPrefetcher::performBaselineInsert(Addr page_addr, uint32_t asid, uint32_
 }
 
 void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core_id) {
-    // 简化的 Guard 逻辑，为了攻击复现，这里暂时保持简单
-    performBaselineInsert(page_addr, asid, core_id);
+    double c = (double)table.size();
+    double n = (double)numEntries;
+
+    static std::mt19937 gen(std::random_device{}()); 
+    std::uniform_real_distribution<double> dis(0.0, 1.0);
+    double rand_val = dis(gen); // 生成 0.0 到 1.0 之间的随机数
+    // double rand_val = 0.4;
+    double prob = 1.0 - pow(1.0 - (c/n), 2.0);
+    std::cerr << "rand_val: " << rand_val << " prob: " << prob << std::endl;
+    if (c > 0 && rand_val <= prob) {
+        int victim = -1;
+        Tick oldest = curTick();
+
+        if (!isVGLO) { // vID 模式
+            for (int i = 0; i < (int)table.size(); i++) {
+                if (table[i].asid == asid && table[i].coreId == core_id) {
+                    if (table[i].lastAccess < oldest) { oldest = table[i].lastAccess; victim = i; }
+                }
+            }
+        }
+        // else {
+        //     for (int i = 0; i < (int)table.size(); i++) {
+        //         if (table[i].lastAccess < oldest) { oldest = table[i].lastAccess; victim = i; }
+        //     }
+        // }
+        if (victim == -1) { 
+            for (int i = 0; i < (int)table.size(); i++) {
+                if (table[i].lastAccess < oldest) { oldest = table[i].lastAccess; victim = i; }
+            }
+        }
+        if (victim != -1) {
+            table.erase(table.begin() + victim);
+            DPRINTF(HWPrefetch, "XPT EVICT: Removing Page=%#x (train LRU), table size: %d\n", table[victim].paddr, table.size());
+        }
+    } else if (table.size() >= (size_t)numEntries) {
+        table.erase(table.begin()); 
+        DPRINTF(HWPrefetch, "XPT full LRU: Removing Page\n");
+    }
+    table.push_back({page_addr, asid, core_id, 1, curTick(), false});
 }
 
 int XptPrefetcher::findEntry(Addr p) {
@@ -118,6 +149,21 @@ int XptPrefetcher::findEntry(Addr p) {
         if (table[i].paddr == p) return i;
     }
     return -1;
+}
+
+
+void
+XptPrefetcher::notify(const CacheAccessProbeArg &acc, const PrefetchInfo &pfi)
+{
+    // 从 pkt 拿到真正的 contextId
+    if (acc.pkt && acc.pkt->req->hasContextId()) {
+        current_asid = acc.pkt->req->contextId();
+    } else {
+        current_asid = 0;
+    }
+
+    // 调用原来的 notify，它内部会调用 calculatePrefetch
+    Queued::notify(acc, pfi);
 }
 
 } // namespace prefetch

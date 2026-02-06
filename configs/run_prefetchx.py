@@ -22,7 +22,7 @@ system.l3bus = L2XBar(clk_domain=system.clk_domain)
 system.l3cache = Cache(size='2MB', assoc=16, 
                        tag_latency=80, data_latency=20, response_latency=20,
                        sequential_access=True,
-                       mshrs=16, tgts_per_mshr=12)
+                       mshrs=12, tgts_per_mshr=12)
 
 # system.l3cache = Cache(size='128kB', assoc=2, 
 #                        tag_latency=20, data_latency=20, response_latency=20,
@@ -107,6 +107,7 @@ system.system_port = system.membus.cpu_side_ports
 # 修改点：目标程序改为你刚刚编译的单进程 test
 # binary = './time_test'
 binary = './test'
+# binary = './attacker'
 system.workload = SEWorkload.init_compatible(binary)
 
 # 修改点：只给核心 0 分配 workload
