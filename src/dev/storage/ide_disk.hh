@@ -61,7 +61,7 @@ class ChunkGenerator;
 
 #define DMA_BACKOFF_PERIOD      200
 
-#define MAX_DMA_SIZE            0x20000  // 128K
+#define MAX_DMA_SIZE            0x200000   // #define MAX_DMA_SIZE            0x20000  // 128K
 #define MAX_SINGLE_DMA_SIZE     0x10000
 #define MAX_MULTSECT            (128)
 

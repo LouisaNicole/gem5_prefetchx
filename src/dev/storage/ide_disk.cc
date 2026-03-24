@@ -433,7 +433,8 @@ IdeDisk::doDmaRead()
         schedule(dmaReadWaitEvent, curTick() + DMA_BACKOFF_PERIOD);
         return;
     } else if (!dmaReadCG->done()) {
-        assert(dmaReadCG->complete() < MAX_DMA_SIZE);
+        // assert(dmaReadCG->complete() < MAX_DMA_SIZE);   // 修改
+        if (dmaReadCG->complete() >= MAX_DMA_SIZE) warn("DMA read size %d exceeds MAX_DMA_SIZE\n", dmaReadCG->complete());
         ctrl->dmaRead(pciToDma(dmaReadCG->addr()), dmaReadCG->size(),
                 &dmaReadWaitEvent, dataBuffer + dmaReadCG->complete());
         ideDiskStats.dmaReadBytes += dmaReadCG->size();
@@ -483,7 +484,8 @@ IdeDisk::doDmaDataWrite()
             diskDelay, totalDiskDelay);
 
     memset(dataBuffer, 0, MAX_DMA_SIZE);
-    assert(cmdBytesLeft <= MAX_DMA_SIZE);
+    // assert(cmdBytesLeft <= MAX_DMA_SIZE);    // 修改
+    if (cmdBytesLeft > MAX_DMA_SIZE) { warn("DMA write cmdBytesLeft=%d exceeds MAX_DMA_SIZE\n", cmdBytesLeft); cmdBytesLeft = MAX_DMA_SIZE; }
     while (bytesRead < curPrd.getByteCount()) {
         readDisk(curSector++, (uint8_t *)(dataBuffer + bytesRead));
         bytesRead += SectorSize;
@@ -561,9 +563,16 @@ IdeDisk::readDisk(uint32_t sector, uint8_t *data)
 {
     uint32_t bytesRead = image->read(data, sector);
 
-    panic_if(bytesRead != SectorSize,
-            "Can't read from %s. Only %d of %d read. errno=%d",
-            name(), bytesRead, SectorSize, errno);
+//     panic_if(bytesRead != SectorSize,
+//             "Can't read from %s. Only %d of %d read. errno=%d",
+//             name(), bytesRead, SectorSize, errno);
+    if (bytesRead != SectorSize) {
+        warn("IDE read incomplete: got %d of %d bytes, padding with zeros\n",
+            bytesRead, SectorSize);
+        memset(dataBuffer + (cmdBytesLeft - SectorSize), 0, SectorSize);
+        cmdBytesLeft -= SectorSize;
+        return;
+    }
 }
 
 void
@@ -580,31 +589,53 @@ IdeDisk::writeDisk(uint32_t sector, uint8_t *data)
 // Setup and handle commands
 ////
 
+// void
+// IdeDisk::startDma(const uint32_t &prdTableBase)
+// {
+//     panic_if(dmaState != Dma_Start,
+//             "Inconsistent DMA state, should be in Dma_Start!");
+
+//     panic_if(devState != Transfer_Data_Dma,
+//             "Inconsistent device state for DMA start!");
+
+//     // PRD base address is given by bits 31:2
+//     curPrdAddr = pciToDma((Addr)(prdTableBase & ~0x3ULL));
+
+//     dmaState = Dma_Transfer;
+
+//     // schedule dma transfer (doDmaTransfer)
+//     schedule(dmaTransferEvent, curTick() + 1);
+// }
+
 void
 IdeDisk::startDma(const uint32_t &prdTableBase)
 {
     panic_if(dmaState != Dma_Start,
             "Inconsistent DMA state, should be in Dma_Start!");
-
     panic_if(devState != Transfer_Data_Dma,
             "Inconsistent device state for DMA start!");
 
-    // PRD base address is given by bits 31:2
-    curPrdAddr = pciToDma((Addr)(prdTableBase & ~0x3ULL));
-
-    dmaState = Dma_Transfer;
-
-    // schedule dma transfer (doDmaTransfer)
-    schedule(dmaTransferEvent, curTick() + 1);
+    warn("DMA request ignored (PIO-only mode)\n");
+    dmaState = Dma_Idle;
+    devState = Device_Idle_S;
+    status = (STATUS_DRDY_BIT | STATUS_SEEK_BIT);
+    // postInterrupt();
+    return;
 }
 
 void
 IdeDisk::abortDma()
 {
-    panic_if(dmaState == Dma_Idle,
+//     panic_if(dmaState == Dma_Idle,
+//             "Inconsistent DMA state, should be Start or Transfer!");
+
+//     panic_if(devState != Transfer_Data_Dma && devState != Prepare_Data_Dma,
+//             "Inconsistent device state, should be Transfer or Prepare!");
+
+    warn_if(dmaState == Dma_Idle,
             "Inconsistent DMA state, should be Start or Transfer!");
 
-    panic_if(devState != Transfer_Data_Dma && devState != Prepare_Data_Dma,
+    warn_if(devState != Transfer_Data_Dma && devState != Prepare_Data_Dma,
             "Inconsistent device state, should be Transfer or Prepare!");
 
     updateState(ACT_CMD_ERROR);

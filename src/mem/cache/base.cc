@@ -476,7 +476,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     // --- XPT 终极物理干预开始 ---
     // ===================================================================
     // 我们在 access 执行完后，立即在这里强制修正 lat
-    if (!satisfied && pkt->isRead()) { // 确认是 LLC Miss 请求
+    if (!satisfied && pkt->isRead() && !pkt->req->isUncacheable() && pkt->req->hasContextId()) { // 确认是 LLC Miss 请求
         auto xpt = dynamic_cast<gem5::prefetch::XptPrefetcher*>(prefetcher);
         
         // // 获取虚拟地址 (Vaddr) 和 物理地址 (Paddr)

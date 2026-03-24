@@ -35,9 +35,9 @@ system.l3cache.prefetcher = XptPrefetcher(
     # activation_threshold = 1,
 )
 
-system.l3cache.prefetcher.enable_defense = False  # 攻击 baseline
-# system.l3cache.prefetcher.enable_defense = True  # 开启防御
-# system.l3cache.prefetcher.is_vGLO = False  # vID 防御
+# system.l3cache.prefetcher.enable_defense = False  # 攻击 baseline
+system.l3cache.prefetcher.enable_defense = True  # 开启防御
+system.l3cache.prefetcher.is_vGLO = False  # vID 防御
 # system.l3cache.prefetcher.is_vGLO = True  # vGLO 防御
 
 # 3. CPU 私有缓存配置 [cite: 3, 7]

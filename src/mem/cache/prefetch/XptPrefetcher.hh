@@ -2,6 +2,7 @@
 #define __MEM_CACHE_PREFETCH_XPT_PREFETCHER_HH__
 
 #include <vector>
+#include <random>
 #include "mem/cache/prefetch/queued.hh"
 #include "params/XptPrefetcher.hh"
 
@@ -12,44 +13,42 @@ namespace prefetch
 
 class XptPrefetcher : public Queued
 {
-  private: // 使用 private 封装内部结构
+  private:
     struct XptEntry {
-        Addr paddr;        // 物理页地址
-        uint32_t asid;     // 模拟 ASID
-        uint32_t coreId;   // 模拟 CoreID
-        int missCounter;   // 激活计数器
-        Tick lastAccess;   // LRU 时间戳
-        bool enabled;      // 是否激活
+        Addr paddr;        // 物理页地址 (4KB对齐)
+        uint32_t asid;     // 模拟进程标识 (Context ID)
+        uint32_t coreId;   // 模拟核心标识
+        int missCounter;   
+        Tick lastAccess;   
+        bool enabled;      
     };
 
     const int numEntries;
     const int threshold;
     const bool enableDefense;
     const bool isVGLO;
-    uint32_t current_asid = 0;
     
     std::vector<XptEntry> table;
+    std::mt19937 gen; // 随机数生成器
 
-    // 辅助函数
     int findEntry(Addr page_addr);
     void performBaselineInsert(Addr page_addr, uint32_t asid, uint32_t core_id);
     void performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core_id);
 
   public:
     XptPrefetcher(const XptPrefetcherParams &p);
-
-    // 供 Cache 调用：检查是否为 XPT 优化命中（不改变 LRU 状态）
     bool isXptOptimizedHit(Addr addr) const;
-
     void calculatePrefetch(const PrefetchInfo &pfi, 
                            std::vector<AddrPriority> &addresses,
                            const CacheAccessor &cache) override;
-
+    // FS模式下通过notify捕捉真实的ContextID
     void notify(const CacheAccessProbeArg &acc, const PrefetchInfo &pfi) override;
+    
+    // 当前请求的上下文信息
+    uint32_t current_asid = 0;
+    uint32_t current_core = 0;
 };
-
 
 } // namespace prefetch
 } // namespace gem5
-
 #endif

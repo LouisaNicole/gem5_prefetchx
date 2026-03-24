@@ -66,8 +66,10 @@ IdeController::Channel::Channel(std::string new_name, IdeController *new_ctrl,
     Named(new_name), ctrl(new_ctrl), primary(new_primary)
 {
     bmiRegs.reset();
-    bmiRegs.status.dmaCap0 = 1;
-    bmiRegs.status.dmaCap1 = 1;
+    // bmiRegs.status.dmaCap0 = 1;
+    // bmiRegs.status.dmaCap1 = 1;
+    bmiRegs.status.dmaCap0 = 0;
+    bmiRegs.status.dmaCap1 = 0;
 }
 
 IdeController::IdeController(const Params &p)

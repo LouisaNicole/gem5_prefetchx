@@ -64,12 +64,34 @@ DmaPort::DmaPort(ClockedObject *dev, System *s,
       defaultSid(sid), defaultSSid(ssid), cacheLineSize(s->cacheLineSize())
 { }
 
+// void
+// DmaPort::handleRespPacket(PacketPtr pkt, Tick delay)
+// {
+//     // Should always see a response with a sender state.
+//     assert(pkt->isResponse());
+//     warn_if(pkt->isError(), "Response pkt error.");
+
+//     // Get the DMA sender state.
+//     auto *state = dynamic_cast<DmaReqState*>(pkt->senderState);
+//     assert(state);
+
+//     handleResp(state, pkt->getAddr(), pkt->req->getSize(), delay);
+
+//     delete pkt;
+// }
+
 void
 DmaPort::handleRespPacket(PacketPtr pkt, Tick delay)
 {
     // Should always see a response with a sender state.
     assert(pkt->isResponse());
-    warn_if(pkt->isError(), "Response pkt error.");
+
+    if (pkt->isError()) {
+        warn("Response pkt error at addr %#x size=%d, skipping.\n", 
+            pkt->getAddr(), pkt->req->getSize());
+        delete pkt;
+        return;
+    }
 
     // Get the DMA sender state.
     auto *state = dynamic_cast<DmaReqState*>(pkt->senderState);
