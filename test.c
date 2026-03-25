@@ -77,6 +77,11 @@ int main() {
 
     volatile char *attacker_pages[XPT_SIZE];
     for (int i = 0; i < XPT_SIZE; i++) attacker_pages[i] = &buffer[i * PAGE_SIZE];
+
+    printf("[ATTACK_DEBUG] attacker_pages[0] VADDR: %p (page-aligned: %p)\n", 
+           attacker_pages[0], 
+           (void*)((uintptr_t)attacker_pages[0] & ~0xFFF));
+           
     volatile char *victim_base = &buffer[500 * PAGE_SIZE];
     
     uint8_t secret_key = 0x96;

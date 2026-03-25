@@ -46,6 +46,10 @@ void XptPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     int idx = findEntry(page_addr);
 
     if (idx != -1) {
+        // ✅ 记录已存在条目的更新（攻击者目标页会频繁出现在这里）
+        DPRINTF(HWPrefetch, "XPT_UPDATE: page=0x%lx idx=%d enabled=%d missCnt=%d lastAccess=%ld->%ld\n",
+                page_addr, idx, table[idx].enabled, table[idx].missCounter,
+                table[idx].lastAccess, curTick());
         table[idx].lastAccess = curTick();
         if (!table[idx].enabled) {
             table[idx].missCounter++;
@@ -72,7 +76,12 @@ void XptPrefetcher::performBaselineInsert(Addr page_addr, uint32_t asid, uint32_
             if (table[i].lastAccess < table[victim].lastAccess) victim = i;
         }
     }
-    if (victim != -1) table.erase(table.begin() + victim);
+    if (victim != -1) {
+        DPRINTF(HWPrefetch, "  [EVICT] idx=%d page=0x%lx enabled=%d missCnt=%d lastAccess=%ld\n",
+                victim, table[victim].paddr, table[victim].enabled, 
+                table[victim].missCounter, table[victim].lastAccess);
+        table.erase(table.begin() + victim);
+    }
     table.push_back({page_addr, asid, core_id, 0, curTick(), false});
 }
 
@@ -80,37 +89,71 @@ void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core
     double c = (double)table.size();
     double n = (double)numEntries;
 
-    static std::mt19937 gen(std::random_device{}()); 
+    // static std::mt19937 gen(std::random_device{}()); 
     std::uniform_real_distribution<double> dis(0.0, 1.0);
     double rand_val = dis(gen); // 生成 0.0 到 1.0 之间的随机数
     // double rand_val = 0.4;
+    // double prob = c/n;
     double prob = 1.0 - pow(1.0 - (c/n), 2.0);
-    std::cerr << "rand_val: " << rand_val << " prob: " << prob << std::endl;
+    // double prob = sqrt(c/n);
+    // std::cerr << "rand_val: " << rand_val << " prob: " << prob << std::endl;
+
+    DPRINTF(HWPrefetch, "=== XPTGuard === page=0x%lx asid=%u core=%u c=%d/n=%d P=%.3f r=%.3f trig=%s vGLO=%d\n",
+            page_addr, asid, core_id, (int)c, numEntries, prob, rand_val, 
+            (rand_val <= prob ? "YES" : "NO"), isVGLO);
+
     int victim = -1;
-    if (c > 0 && rand_val <= prob) { // 触发概率替换
-        if (!isVGLO) { // vID模式: 仅限同 ID 域
-            for (int i = 0; i < table.size(); i++) {
+    if (c > 0 && rand_val <= prob) {
+        // 触发概率置换
+        if (!isVGLO) {
+            // vID: 找同(ASID, CoreID)最旧条目
+            for (int i = 0; i < (int)table.size(); i++) {
                 if (table[i].asid == asid && table[i].coreId == core_id) {
-                    if (victim == -1 || table[i].lastAccess < table[victim].lastAccess) victim = i;
+                    if (victim == -1 || table[i].lastAccess < table[victim].lastAccess)
+                        victim = i;
                 }
             }
-        }
-        // vGLO模式或vID未找到匹配项且已满时，强制全局LRU
-        if (victim == -1 && (isVGLO || table.size() >= numEntries)) {
-            victim = 0;
-            for (int i = 1; i < table.size(); i++) {
-                if (table[i].lastAccess < table[victim].lastAccess) victim = i;
+            // 找不到同ID条目
+            if (victim == -1) {
+                if (table.size() >= numEntries) {
+                    // c==n: 回退全局LRU
+                    victim = 0;
+                    for (int i = 1; i < (int)table.size(); i++) {
+                        if (table[i].lastAccess < table[victim].lastAccess)
+                            victim = i;
+                    }
+                }
+                // c<n: victim=-1，直接插入空闲槽（不驱逐）
             }
+        } else {
+            // vGLO: 全局LRU驱逐最旧条目
+            victim = 0;
+            for (int i = 1; i < (int)table.size(); i++) {
+                if (table[i].lastAccess < table[victim].lastAccess)
+                    victim = i;
+            }
+            DPRINTF(HWPrefetch, "XPTGuard: page=0x%lx c=%d n=%d P=%.3f r=%.3f trig=%d\n",
+            page_addr, (int)c, numEntries, prob, rand_val, (rand_val<=prob));
         }
-    } else if (table.size() >= numEntries) { // 未触发概率但满了，强制LRU
-        victim = 0;
-        for (int i = 1; i < table.size(); i++) {
-            if (table[i].lastAccess < table[victim].lastAccess) victim = i;
+        // ✅ 关键3：记录最终驱逐的条目
+        if (victim != -1) {
+            DPRINTF(HWPrefetch, "  [EVICT] idx=%d page=0x%lx enabled=%d missCnt=%d lastAccess=%ld\n",
+                    victim, table[victim].paddr, table[victim].enabled, 
+                    table[victim].missCounter, table[victim].lastAccess);
+            table.erase(table.begin() + victim);
         }
     }
-
-    if (victim != -1) table.erase(table.begin() + victim);
-    table.push_back({page_addr, asid, core_id, 1, curTick(), false});
+    // r > P: 不触发概率置换，直接插入
+    // 如果表满且未触发概率置换，则本次请求不插入（丢弃）
+    else {
+        if (table.size() >= numEntries) {
+            return;
+        }
+    }
+    DPRINTF(HWPrefetch, "  [INSERT] page=0x%lx -> table size: %d/%d\n",
+            page_addr, (int)table.size()+1, numEntries);
+    table.push_back({page_addr, asid, core_id, 0, curTick(), false});
+    DPRINTF(HWPrefetch, "=== XPTGuard END ===\n");
 }
 
 } // namespace prefetch

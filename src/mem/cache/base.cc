@@ -324,7 +324,8 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
     // // 如果不是 XPT 命中，我们强行让 forward_time 增加 50 周期。
     // if (pkt && pkt->isRead()) {
     //     auto xpt = dynamic_cast<gem5::prefetch::XptPrefetcher*>(prefetcher);
-    //     if (xpt && xpt->isXptOptimizedHit(pkt->getAddr())) {
+    //     if (xpt && xpt->isXptOptimizedHit(pkt->getAddr(), pkt->req->contextId(),
+                                            //  pkt->req->requestorId())) {
     //         // XPT 命中：保持 forward_time 不变（已经足够快了）
     //         // DPRINTF(HWPrefetch, "XPT PHYSICAL FORWARD: Addr %#x bypassing lookup tax\n", pkt->getAddr());
     //     } else {
@@ -479,11 +480,11 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     if (!satisfied && pkt->isRead() && !pkt->req->isUncacheable() && pkt->req->hasContextId()) { // 确认是 LLC Miss 请求
         auto xpt = dynamic_cast<gem5::prefetch::XptPrefetcher*>(prefetcher);
         
-        // // 获取虚拟地址 (Vaddr) 和 物理地址 (Paddr)
+        // 获取虚拟地址 (Vaddr) 和 物理地址 (Paddr)
         // Addr vaddr = pkt->req->hasVaddr() ? pkt->req->getVaddr() : 0;
         // Addr paddr = pkt->getAddr();
         // bool hit = (xpt && xpt->isXptOptimizedHit(pkt->getAddr()));
-        // // 强力打印对比
+        // 强力打印对比
         // std::cerr << "[ADDR_MAP] Vaddr: 0x" << std::hex << vaddr 
         //         << " | Paddr: 0x" << paddr 
         //         << " | Page: 0x" << (paddr & ~0xFFF)
@@ -507,7 +508,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
             // 这意味着这个 Packet 必须在 L3 停留 50 周期后才能发往 DRAM
             lat = lookupLatency;
             forward_time += cyclesToTicks(lookupLatency);
-            // pkt->headerDelay += cyclesToTicks(lookupLatency);
+            pkt->headerDelay += cyclesToTicks(lookupLatency);
             // DPRINTF(HWPrefetch, "NO XPT: Access Latency: %d cycles\n", lat);
         }
     }
