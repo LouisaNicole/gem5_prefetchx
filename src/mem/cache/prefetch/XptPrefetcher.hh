@@ -47,6 +47,13 @@ class XptPrefetcher : public Queued
     // 当前请求的上下文信息
     uint32_t current_asid = 0;
     uint32_t current_core = 0;
+
+    // // Key: 物理页地址, Value: 被驱逐时的 Tick
+    // std::unordered_map<Addr, Tick> evictionRegistry;
+    // // 记录页面被驱逐的时间，用于静默期拦截
+    // std::unordered_map<Addr, Tick> evictionDeadTime;
+    // // 静默期长度：设置为 50,000,000 Ticks (约 50 微秒)，足以吃掉所有 MSHR 幽灵回填
+    // const Tick DEAD_TIME_DURATION = 50000000ULL;
 };
 
 } // namespace prefetch

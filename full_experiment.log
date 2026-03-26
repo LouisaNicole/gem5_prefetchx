@@ -1,0 +1,200 @@
+================ Experiment Started at Thu Mar 26 16:51:31 CST 2026 ================
+
+[RUNNING] Mode: Baseline, Defense: 0...
+warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
+warn: Base 10 memory/cache size 2MB will be cast to base 2 size 2MiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 256kB will be cast to base 2 size 256KiB.
+Global frequency set at 1000000000000 ticks per second
+src/mem/dram_interface.cc:690: warn: DRAM device capacity (16384 Mbytes) does not match the address range assigned (2048 Mbytes)
+src/base/statistics.hh:279: warn: One of the stats is a legacy stat. Legacy stat is a stat that does not belong to any statistics::Group. Legacy stat is deprecated.
+system.remote_gdb: Listening for connections on port 7000
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 25.0.0.1
+gem5 compiled Mar 26 2026 16:38:44
+gem5 started Mar 26 2026 16:51:31
+gem5 executing on DESKTOP-KCL9OPK, pid 8045
+command line: ./build/X86/gem5.opt ./configs/run_prefetchx.py --defense=0
+
+Beginning simulation!
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+=== XPT STATISTICAL MULTI-ROUND ATTACK ===
+[ATTACK_DEBUG] attacker_pages[0] VADDR: 0x7ffff6e1d000 (page-aligned: 0x7ffff6e1d000)
+Target Key: 0x9d
+
+[*] Calibrating Base Latency...
+  Sample 01: 401
+  Sample 02: 401
+  Sample 03: 401
+  Sample 04: 401
+  Sample 05: 401
+  Sample 06: 401
+  Sample 07: 401
+  Sample 08: 401
+  Sample 09: 401
+  Sample 10: 401
+[*] Sorted Samples: 401 401 401 401 401 401 401 401 401 401 
+RESULT_THRESHOLD:441
+Round 01: 10011101
+Round 02: 10011101
+Round 03: 10011101
+Round 04: 10011101
+Round 05: 10011101
+Round 06: 10011101
+Round 07: 10011101
+Round 08: 10011101
+Round 09: 10011101
+Round 10: 10011101
+Round 11: 10011101
+
+=== FINAL VOTING RESULTS ===
+Bit 0 | Votes: 11/11 | Final: 1 | OK
+Bit 1 | Votes:  0/11 | Final: 0 | OK
+Bit 2 | Votes: 11/11 | Final: 1 | OK
+Bit 3 | Votes: 11/11 | Final: 1 | OK
+Bit 4 | Votes: 11/11 | Final: 1 | OK
+Bit 5 | Votes:  0/11 | Final: 0 | OK
+Bit 6 | Votes:  0/11 | Final: 0 | OK
+Bit 7 | Votes: 11/11 | Final: 1 | OK
+
+Recovered Key: 0x9d (Target: 0x9d)
+
+[RUNNING] Mode: vID, Defense: 1...
+warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
+warn: Base 10 memory/cache size 2MB will be cast to base 2 size 2MiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 256kB will be cast to base 2 size 256KiB.
+Global frequency set at 1000000000000 ticks per second
+src/mem/dram_interface.cc:690: warn: DRAM device capacity (16384 Mbytes) does not match the address range assigned (2048 Mbytes)
+src/base/statistics.hh:279: warn: One of the stats is a legacy stat. Legacy stat is a stat that does not belong to any statistics::Group. Legacy stat is deprecated.
+system.remote_gdb: Listening for connections on port 7000
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 25.0.0.1
+gem5 compiled Mar 26 2026 16:38:44
+gem5 started Mar 26 2026 16:51:45
+gem5 executing on DESKTOP-KCL9OPK, pid 8091
+command line: ./build/X86/gem5.opt ./configs/run_prefetchx.py --defense=1 --mode=vID --threshold=441
+
+[*] XPTGuard Active: Mode=vID
+Beginning simulation!
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+=== XPT STATISTICAL MULTI-ROUND ATTACK ===
+[ATTACK_DEBUG] attacker_pages[0] VADDR: 0x7ffff6e1d000 (page-aligned: 0x7ffff6e1d000)
+Target Key: 0x9d
+
+[*] Using Oracle Threshold: 441
+Round 01: 11111111
+Round 02: 11111111
+Round 03: 11111111
+Round 04: 11111111
+Round 05: 11111111
+Round 06: 11111111
+Round 07: 11111111
+Round 08: 11111111
+Round 09: 11011101
+Round 10: 10011101
+Round 11: 10011101
+
+=== FINAL VOTING RESULTS ===
+Bit 0 | Votes: 11/11 | Final: 1 | OK
+Bit 1 | Votes:  8/11 | Final: 1 | FAIL
+Bit 2 | Votes: 11/11 | Final: 1 | OK
+Bit 3 | Votes: 11/11 | Final: 1 | OK
+Bit 4 | Votes: 11/11 | Final: 1 | OK
+Bit 5 | Votes:  8/11 | Final: 1 | FAIL
+Bit 6 | Votes:  9/11 | Final: 1 | FAIL
+Bit 7 | Votes: 11/11 | Final: 1 | OK
+
+Recovered Key: 0xff (Target: 0x9d)
+
+[RUNNING] Mode: vGLO, Defense: 1...
+warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
+warn: Base 10 memory/cache size 2MB will be cast to base 2 size 2MiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 256kB will be cast to base 2 size 256KiB.
+Global frequency set at 1000000000000 ticks per second
+src/mem/dram_interface.cc:690: warn: DRAM device capacity (16384 Mbytes) does not match the address range assigned (2048 Mbytes)
+src/base/statistics.hh:279: warn: One of the stats is a legacy stat. Legacy stat is a stat that does not belong to any statistics::Group. Legacy stat is deprecated.
+system.remote_gdb: Listening for connections on port 7000
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 25.0.0.1
+gem5 compiled Mar 26 2026 16:38:44
+gem5 started Mar 26 2026 16:51:57
+gem5 executing on DESKTOP-KCL9OPK, pid 8184
+command line: ./build/X86/gem5.opt ./configs/run_prefetchx.py --defense=1 --mode=vGLO --threshold=441
+
+[*] XPTGuard Active: Mode=vGLO
+Beginning simulation!
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+=== XPT STATISTICAL MULTI-ROUND ATTACK ===
+[ATTACK_DEBUG] attacker_pages[0] VADDR: 0x7ffff6e1d000 (page-aligned: 0x7ffff6e1d000)
+Target Key: 0x9d
+
+[*] Using Oracle Threshold: 441
+Round 01: 11111111
+Round 02: 11111111
+Round 03: 11111111
+Round 04: 11111111
+Round 05: 11111111
+Round 06: 11111111
+Round 07: 11111111
+Round 08: 11111111
+Round 09: 11111111
+Round 10: 11111111
+Round 11: 11111111
+
+=== FINAL VOTING RESULTS ===
+Bit 0 | Votes: 11/11 | Final: 1 | OK
+Bit 1 | Votes: 11/11 | Final: 1 | FAIL
+Bit 2 | Votes: 11/11 | Final: 1 | OK
+Bit 3 | Votes: 11/11 | Final: 1 | OK
+Bit 4 | Votes: 11/11 | Final: 1 | OK
+Bit 5 | Votes: 11/11 | Final: 1 | FAIL
+Bit 6 | Votes: 11/11 | Final: 1 | FAIL
+Bit 7 | Votes: 11/11 | Final: 1 | OK
+
+Recovered Key: 0xff (Target: 0x9d)
+
+
+----------------------------------------------------------------
+| Mode     | Threshold | Target Key | Recovered | Status       |
+----------------------------------------------------------------
+| Baseline | 441       | 0x9d       | 0x9d      | SUCCESS      |
+| vID      | 441       | 0x9d       | 0xff      | BLOCK (Pass) |
+| vGLO     | 441       | 0x9d       | 0xff      | BLOCK (Pass) |
+----------------------------------------------------------------
+
+================ Experiment Ended at Thu Mar 26 16:52:09 CST 2026 ================
