@@ -36,3 +36,23 @@ configs/dram/lowp_sweep.cfg
 .vscode
 typings
 .DS_Store
+# Debug logs
+trace.txt
+*.log
+*.blg
+*.aux
+*.bcf
+*.bbl
+*.out
+*.toc
+*.lof
+*.lot
+*.synctex.gz
+
+# Build artifacts
+build/
+m5
+m5.opt
+*.o
+*.so
+*.a
