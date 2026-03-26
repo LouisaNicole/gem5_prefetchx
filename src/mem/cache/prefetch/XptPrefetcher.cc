@@ -123,9 +123,10 @@ void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core
     std::uniform_real_distribution<double> dis(0.0, 1.0);
     double rand_val = dis(gen); // 生成 0.0 到 1.0 之间的随机数
     // double rand_val = 0.4;
-    // double prob = c/n;
+    // double max_prob = 0.2;
+    // double prob = (c/n) * max_prob;
     double prob = 1.0 - pow(1.0 - (c/n), 2.0);
-    // double prob = sqrt(c/n);
+    // double prob = (c/n);
     // std::cerr << "rand_val: " << rand_val << " prob: " << prob << std::endl;
 
     DPRINTF(HWPrefetch, "=== XPTGuard === page=0x%lx asid=%u core=%u c=%d/n=%d P=%.3f r=%.3f trig=%s vGLO=%d\n",
@@ -176,8 +177,15 @@ void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core
     // r > P: 不触发概率置换，直接插入
     // 如果表满且未触发概率置换，则本次请求不插入（丢弃）
     else {
+        // 【未中奖：普通模式】如果表满了，执行标准全局 LRU 置换
         if (table.size() >= numEntries) {
-            return;
+            victim = 0;
+            for (int i = 1; i < (int)table.size(); i++) {
+                if (table[i].lastAccess < table[victim].lastAccess)
+                    victim = i;
+            }
+            table.erase(table.begin() + victim);
+            DPRINTF(HWPrefetch, "XPTGuard: Lottery lost, fallback to Global LRU eviction.\n");
         }
     }
     DPRINTF(HWPrefetch, "  [INSERT] page=0x%lx -> table size: %d/%d\n",
