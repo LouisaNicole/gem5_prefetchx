@@ -66,4 +66,4 @@ run_stage "vGLO" 1 "$Baseline_THRESH"
     printf "| vGLO     | %-9s | %-10s | %-9s | %-12s |\n" "$Baseline_THRESH" "$vGLO_TARGET" "$vGLO_KEY" "$(check_status "$vGLO_KEY" "$vGLO_TARGET")"
     echo "----------------------------------------------------------------"
     echo -e "\n================ Experiment Ended at $(date) ================"
-} | tee -a $LOG_FILE  # 使用大括号包裹，一次性将整个表格写入日志
+} | tee -a $LOG_FILE  # 
