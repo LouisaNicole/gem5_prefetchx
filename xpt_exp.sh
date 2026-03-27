@@ -17,12 +17,33 @@ run_stage() {
     echo -e "\n[RUNNING] Mode: $mode, Defense: $defense..." | tee -a $LOG_FILE
     
     if [ "$mode" == "Baseline" ]; then
-        ./build/X86/gem5.opt ./configs/run_prefetchx.py --defense=0 > $tmp_log 2>&1
+        ./build/X86/gem5.opt ./configs/run_prefetchx_merge.py --defense=0 > $tmp_log 2>&1
     else
-        ./build/X86/gem5.opt ./configs/run_prefetchx.py --defense=1 --mode=$mode --threshold=$thresh > $tmp_log 2>&1
+        ./build/X86/gem5.opt ./configs/run_prefetchx_merge.py --defense=1 --mode=$mode --threshold=$thresh > $tmp_log 2>&1
     fi
 
+    # 将详细延迟信息也存入总日志
     cat $tmp_log >> $LOG_FILE
+
+    # --- 提取延迟统计信息 ---
+    echo -e "\n[*] Latency Analysis for $mode (Threshold: $thresh):" | tee -a $LOG_FILE
+    echo "Bit | Avg Latency | Decision" | tee -a $LOG_FILE
+    
+    # 这里的 awk 逻辑会遍历所有 Round，计算每个 bit 的平均延迟
+    grep "Round " $tmp_log | awk -v t="$thresh" '
+    {
+        for(i=3; i<=NF; i++) {
+            split($i, a, /[()]/);
+            sum[11-(i-2)] += a[2];
+            count[11-(i-2)]++;
+        }
+    }
+    END {
+        for(i=7; i>=0; i--) {
+            avg = sum[i]/count[i];
+            printf "Bit %d | %-11.1f | %s\n", i, avg, (avg > t ? "High (1)" : "Low (0)");
+        }
+    }' | tee -a $LOG_FILE
 
     # --- 关键修正：精准抓取 Key ---
     # 匹配 "Recovered Key: 0xXX" 格式，并提取 0xXX

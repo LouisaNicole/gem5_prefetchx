@@ -1,4 +1,4 @@
-================ Experiment Started at Thu Mar 26 22:32:52 CST 2026 ================
+================ Experiment Started at Fri Mar 27 14:42:55 CST 2026 ================
 
 [RUNNING] Mode: Baseline, Defense: 0...
 warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
@@ -14,10 +14,10 @@ gem5 Simulator System.  https://www.gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 25.0.0.1
-gem5 compiled Mar 26 2026 22:26:54
-gem5 started Mar 26 2026 22:32:53
-gem5 executing on DESKTOP-KCL9OPK, pid 27719
-command line: ./build/X86/gem5.opt ./configs/run_prefetchx.py --defense=0
+gem5 compiled Mar 27 2026 14:23:31
+gem5 started Mar 27 2026 14:42:55
+gem5 executing on DESKTOP-KCL9OPK, pid 13562
+command line: ./build/X86/gem5.opt ./configs/run_prefetchx_merge.py --defense=0
 
 Beginning simulation!
 src/sim/mem_state.cc:443: info: Increasing stack size by one page.
@@ -31,7 +31,7 @@ src/sim/mem_state.cc:443: info: Increasing stack size by one page.
 src/sim/mem_state.cc:443: info: Increasing stack size by one page.
 === XPT STATISTICAL MULTI-ROUND ATTACK ===
 [ATTACK_DEBUG] attacker_pages[0] VADDR: 0x7ffff6e1d000 (page-aligned: 0x7ffff6e1d000)
-Target Key: 0x9d
+Target Key: 0x0f
 
 [*] Calibrating Base Latency...
   Sample 01: 401
@@ -46,29 +46,37 @@ Target Key: 0x9d
   Sample 10: 401
 [*] Sorted Samples: 401 401 401 401 401 401 401 401 401 401 
 RESULT_THRESHOLD:441
-Round 01: 10011101
-Round 02: 10011101
-Round 03: 10011101
-Round 04: 10011101
-Round 05: 10011101
-Round 06: 10011101
-Round 07: 10011101
-Round 08: 10011101
-Round 09: 10011101
-Round 10: 10011101
-Round 11: 10011101
+Round 01: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
+Round 02: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
+Round 03: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
+Round 04: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
+Round 05: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
+Round 06: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
+Round 07: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
+Round 08: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
+Round 09: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
+Round 10: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
+Round 11: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
 
 === FINAL VOTING RESULTS ===
 Bit 0 | Votes: 11/11 | Final: 1 | OK
-Bit 1 | Votes:  0/11 | Final: 0 | OK
+Bit 1 | Votes: 11/11 | Final: 1 | OK
 Bit 2 | Votes: 11/11 | Final: 1 | OK
 Bit 3 | Votes: 11/11 | Final: 1 | OK
-Bit 4 | Votes: 11/11 | Final: 1 | OK
+Bit 4 | Votes:  0/11 | Final: 0 | OK
 Bit 5 | Votes:  0/11 | Final: 0 | OK
 Bit 6 | Votes:  0/11 | Final: 0 | OK
-Bit 7 | Votes: 11/11 | Final: 1 | OK
+Bit 7 | Votes:  0/11 | Final: 0 | OK
 
-Recovered Key: 0x9d (Target: 0x9d)
+Recovered Key: 0x0f (Target: 0x0f)
+
+[*] Latency Analysis for Baseline (Threshold: ):
+Bit | Avg Latency | Decision
+Bit 7 | 405.0       | High (1)
+Bit 6 | 485.0       | High (1)
+Bit 5 | 485.0       | High (1)
+Bit 4 | 485.0       | High (1)
+Bit 3 | 485.0       | High (1)
 
 [RUNNING] Mode: vID, Defense: 1...
 warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
@@ -84,10 +92,10 @@ gem5 Simulator System.  https://www.gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 25.0.0.1
-gem5 compiled Mar 26 2026 22:26:54
-gem5 started Mar 26 2026 22:33:06
-gem5 executing on DESKTOP-KCL9OPK, pid 27747
-command line: ./build/X86/gem5.opt ./configs/run_prefetchx.py --defense=1 --mode=vID --threshold=441
+gem5 compiled Mar 27 2026 14:23:31
+gem5 started Mar 27 2026 14:43:09
+gem5 executing on DESKTOP-KCL9OPK, pid 13619
+command line: ./build/X86/gem5.opt ./configs/run_prefetchx_merge.py --defense=1 --mode=vID --threshold=441
 
 [*] XPTGuard Active: Mode=vID
 Beginning simulation!
@@ -102,32 +110,40 @@ src/sim/mem_state.cc:443: info: Increasing stack size by one page.
 src/sim/mem_state.cc:443: info: Increasing stack size by one page.
 === XPT STATISTICAL MULTI-ROUND ATTACK ===
 [ATTACK_DEBUG] attacker_pages[0] VADDR: 0x7ffff6e1d000 (page-aligned: 0x7ffff6e1d000)
-Target Key: 0x9d
+Target Key: 0x0f
 
 [*] Using Oracle Threshold: 441
-Round 01: 11111111
-Round 02: 11111111
-Round 03: 11111111
-Round 04: 11111111
-Round 05: 11111111
-Round 06: 11111111
-Round 07: 11111111
-Round 08: 11111111
-Round 09: 11111111
-Round 10: 11111101
-Round 11: 10011101
+Round 01: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 02: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 03: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 04: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 05: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 06: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 07: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 08: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 09: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 10: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 11: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
 
 === FINAL VOTING RESULTS ===
 Bit 0 | Votes: 11/11 | Final: 1 | OK
-Bit 1 | Votes:  9/11 | Final: 1 | FAIL
+Bit 1 | Votes: 11/11 | Final: 1 | OK
 Bit 2 | Votes: 11/11 | Final: 1 | OK
 Bit 3 | Votes: 11/11 | Final: 1 | OK
-Bit 4 | Votes: 11/11 | Final: 1 | OK
-Bit 5 | Votes: 10/11 | Final: 1 | FAIL
-Bit 6 | Votes: 10/11 | Final: 1 | FAIL
-Bit 7 | Votes: 11/11 | Final: 1 | OK
+Bit 4 | Votes: 11/11 | Final: 1 | FAIL
+Bit 5 | Votes: 11/11 | Final: 1 | FAIL
+Bit 6 | Votes: 11/11 | Final: 1 | FAIL
+Bit 7 | Votes: 11/11 | Final: 1 | FAIL
 
-Recovered Key: 0xff (Target: 0x9d)
+Recovered Key: 0xff (Target: 0x0f)
+
+[*] Latency Analysis for vID (Threshold: 441):
+Bit | Avg Latency | Decision
+Bit 7 | 485.0       | High (1)
+Bit 6 | 485.0       | High (1)
+Bit 5 | 485.0       | High (1)
+Bit 4 | 485.0       | High (1)
+Bit 3 | 485.0       | High (1)
 
 [RUNNING] Mode: vGLO, Defense: 1...
 warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
@@ -143,10 +159,10 @@ gem5 Simulator System.  https://www.gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 25.0.0.1
-gem5 compiled Mar 26 2026 22:26:54
-gem5 started Mar 26 2026 22:33:18
-gem5 executing on DESKTOP-KCL9OPK, pid 27772
-command line: ./build/X86/gem5.opt ./configs/run_prefetchx.py --defense=1 --mode=vGLO --threshold=441
+gem5 compiled Mar 27 2026 14:23:31
+gem5 started Mar 27 2026 14:43:22
+gem5 executing on DESKTOP-KCL9OPK, pid 13654
+command line: ./build/X86/gem5.opt ./configs/run_prefetchx_merge.py --defense=1 --mode=vGLO --threshold=441
 
 [*] XPTGuard Active: Mode=vGLO
 Beginning simulation!
@@ -161,40 +177,48 @@ src/sim/mem_state.cc:443: info: Increasing stack size by one page.
 src/sim/mem_state.cc:443: info: Increasing stack size by one page.
 === XPT STATISTICAL MULTI-ROUND ATTACK ===
 [ATTACK_DEBUG] attacker_pages[0] VADDR: 0x7ffff6e1d000 (page-aligned: 0x7ffff6e1d000)
-Target Key: 0x9d
+Target Key: 0x0f
 
 [*] Using Oracle Threshold: 441
-Round 01: 11111111
-Round 02: 11111111
-Round 03: 11111111
-Round 04: 11111111
-Round 05: 11111111
-Round 06: 11111111
-Round 07: 11111111
-Round 08: 11111111
-Round 09: 11111111
-Round 10: 11111111
-Round 11: 11111111
+Round 01: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 02: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 03: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 04: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 05: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 06: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 07: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 08: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 09: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 10: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+Round 11: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
 
 === FINAL VOTING RESULTS ===
 Bit 0 | Votes: 11/11 | Final: 1 | OK
-Bit 1 | Votes: 11/11 | Final: 1 | FAIL
+Bit 1 | Votes: 11/11 | Final: 1 | OK
 Bit 2 | Votes: 11/11 | Final: 1 | OK
 Bit 3 | Votes: 11/11 | Final: 1 | OK
-Bit 4 | Votes: 11/11 | Final: 1 | OK
+Bit 4 | Votes: 11/11 | Final: 1 | FAIL
 Bit 5 | Votes: 11/11 | Final: 1 | FAIL
 Bit 6 | Votes: 11/11 | Final: 1 | FAIL
-Bit 7 | Votes: 11/11 | Final: 1 | OK
+Bit 7 | Votes: 11/11 | Final: 1 | FAIL
 
-Recovered Key: 0xff (Target: 0x9d)
+Recovered Key: 0xff (Target: 0x0f)
+
+[*] Latency Analysis for vGLO (Threshold: 441):
+Bit | Avg Latency | Decision
+Bit 7 | 485.0       | High (1)
+Bit 6 | 485.0       | High (1)
+Bit 5 | 485.0       | High (1)
+Bit 4 | 485.0       | High (1)
+Bit 3 | 485.0       | High (1)
 
 
 ----------------------------------------------------------------
 | Mode     | Threshold | Target Key | Recovered | Status       |
 ----------------------------------------------------------------
-| Baseline | 441       | 0x9d       | 0x9d      | SUCCESS      |
-| vID      | 441       | 0x9d       | 0xff      | BLOCK (Pass) |
-| vGLO     | 441       | 0x9d       | 0xff      | BLOCK (Pass) |
+| Baseline | 441       | 0x0f       | 0x0f      | SUCCESS      |
+| vID      | 441       | 0x0f       | 0xff      | BLOCK (Pass) |
+| vGLO     | 441       | 0x0f       | 0xff      | BLOCK (Pass) |
 ----------------------------------------------------------------
 
-================ Experiment Ended at Thu Mar 26 22:33:30 CST 2026 ================
+================ Experiment Ended at Fri Mar 27 14:43:34 CST 2026 ================

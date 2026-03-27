@@ -119,22 +119,23 @@ void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core
     double c = (double)table.size();
     double n = (double)numEntries;
 
-    // static std::mt19937 gen(std::random_device{}()); 
-    std::uniform_real_distribution<double> dis(0.0, 1.0);
-    double rand_val = dis(gen); // 生成 0.0 到 1.0 之间的随机数
+    static std::mt19937 gen(std::random_device{}()); 
+    std::uniform_int_distribution<int> dis(0, 255);
+    int rand_x = dis(gen);
     // double rand_val = 0.4;
     // double max_prob = 0.2;
     // double prob = (c/n) * max_prob;
-    double prob = 1.0 - pow(1.0 - (c/n), 2.0);
-    // double prob = (c/n);
+    // double prob = 1.0 - pow(1.0 - (c/n), 2.0);
+    double prob = (c/n);
+    int threshold = static_cast<int>(prob * 256);
     // std::cerr << "rand_val: " << rand_val << " prob: " << prob << std::endl;
 
-    DPRINTF(HWPrefetch, "=== XPTGuard === page=0x%lx asid=%u core=%u c=%d/n=%d P=%.3f r=%.3f trig=%s vGLO=%d\n",
-            page_addr, asid, core_id, (int)c, numEntries, prob, rand_val, 
-            (rand_val <= prob ? "YES" : "NO"), isVGLO);
+    DPRINTF(HWPrefetch, "=== XPTGuard === page=0x%lx asid=%u core=%u c=%d/n=%d P=%d r=%d trig=%s vGLO=%d\n",
+            page_addr, asid, core_id, (int)c, numEntries, threshold, rand_x, 
+            (rand_x <= threshold ? "YES" : "NO"), isVGLO);
 
     int victim = -1;
-    if (c > 0 && rand_val <= prob) {
+    if (c > 0 && rand_x <= threshold) {
         // 触发概率置换
         if (!isVGLO) {
             // vID: 找同(ASID, CoreID)最旧条目
@@ -153,8 +154,18 @@ void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core
                         if (table[i].lastAccess < table[victim].lastAccess)
                             victim = i;
                     }
+                    DPRINTF(HWPrefetch, "vID fallback to Global LRU eviction, page=0x%lx\n", table[victim].paddr);
+                    table.erase(table.begin() + victim);
                 }
+                DPRINTF(HWPrefetch, "vID [INSERT] page=0x%lx -> table size: %d/%d\n", page_addr, (int)table.size()+1, numEntries);
+                table.push_back({page_addr, asid, core_id, 0, curTick(), false});
                 // c<n: victim=-1，直接插入空闲槽（不驱逐）
+            }
+            else {
+                DPRINTF(HWPrefetch, "vID [PROB-EVICT] same ID, page=0x%lx\n", table[victim].paddr);
+                table.erase(table.begin() + victim);
+                DPRINTF(HWPrefetch, "vID [INSERT] page=0x%lx -> table size: %d/%d\n", page_addr, (int)table.size()+1, numEntries);
+                table.push_back({page_addr, asid, core_id, 0, curTick(), false});
             }
         } else {
             // vGLO: 全局LRU驱逐最旧条目
@@ -163,34 +174,27 @@ void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core
                 if (table[i].lastAccess < table[victim].lastAccess)
                     victim = i;
             }
-            DPRINTF(HWPrefetch, "XPTGuard: page=0x%lx c=%d n=%d P=%.3f r=%.3f trig=%d\n",
-            page_addr, (int)c, numEntries, prob, rand_val, (rand_val<=prob));
-        }
-        // ✅ 关键3：记录最终驱逐的条目
-        if (victim != -1) {
-            DPRINTF(HWPrefetch, "  [EVICT] idx=%d page=0x%lx enabled=%d missCnt=%d lastAccess=%ld\n",
-                    victim, table[victim].paddr, table[victim].enabled, 
-                    table[victim].missCounter, table[victim].lastAccess);
+            DPRINTF(HWPrefetch, "vGLO [PROB-EVICT], page=0x%lx\n", table[victim].paddr);
             table.erase(table.begin() + victim);
+            DPRINTF(HWPrefetch, "vGLO [INSERT] page=0x%lx -> table size: %d/%d\n", page_addr, (int)table.size()+1, numEntries);
+            table.push_back({page_addr, asid, core_id, 0, curTick(), false});
         }
     }
     // r > P: 不触发概率置换，直接插入
-    // 如果表满且未触发概率置换，则本次请求不插入（丢弃）
+    // 如果表满且未触发概率置换，则回退全局LRU
     else {
-        // 【未中奖：普通模式】如果表满了，执行标准全局 LRU 置换
         if (table.size() >= numEntries) {
             victim = 0;
             for (int i = 1; i < (int)table.size(); i++) {
                 if (table[i].lastAccess < table[victim].lastAccess)
                     victim = i;
             }
+            DPRINTF(HWPrefetch, "[NO-PROB-EVICT] fallback to Global LRU eviction.\n");
             table.erase(table.begin() + victim);
-            DPRINTF(HWPrefetch, "XPTGuard: Lottery lost, fallback to Global LRU eviction.\n");
         }
+        DPRINTF(HWPrefetch, "  [INSERT] page=0x%lx -> table size: %d/%d\n", page_addr, (int)table.size()+1, numEntries);
+        table.push_back({page_addr, asid, core_id, 0, curTick(), false});
     }
-    DPRINTF(HWPrefetch, "  [INSERT] page=0x%lx -> table size: %d/%d\n",
-            page_addr, (int)table.size()+1, numEntries);
-    table.push_back({page_addr, asid, core_id, 0, curTick(), false});
     DPRINTF(HWPrefetch, "=== XPTGuard END ===\n");
 }
 

@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
         use_fixed_threshold = 1;
     }
 
-    uint8_t secret_key = 0x9d; // 目标密钥
+    uint8_t secret_key = 0x0f; // 目标密钥
     size_t mem_size = 4000 * PAGE_SIZE; 
     char *buffer = (char *)aligned_alloc(PAGE_SIZE, mem_size);
     memset(buffer, 0x55, mem_size);
@@ -137,13 +137,14 @@ int main(int argc, char *argv[]) {
     // --- 第二步：多轮全扫描 ---
     for (int r = 0; r < NUM_ROUNDS; r++) {
         printf("Round %02d: ", r + 1);
-        for (int b = KEY_BITS-1; b >=0; b--) {
+        for (int b = KEY_BITS-1; b >= 0; b--) {
             uint32_t lat = probe_once(b, secret_key, attacker_pages, victim_base, dummy_pages, 0);
             
             int is_one = (lat > threshold) ? 1 : 0;
             vote_box[b] += is_one;
             
-            printf("%d", is_one); // 实时打印本轮结果
+            // 修改这里：打印格式为 "判定(原始延迟)"
+            printf("%d(%u) ", is_one, lat); 
         }
         printf("\n");
     }

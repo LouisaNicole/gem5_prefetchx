@@ -2,6 +2,15 @@ import m5
 from m5.objects import *
 import os
 
+import argparse
+
+parser = argparse.ArgumentParser()
+# 修改这里：使用 type=int 或者字符串判断，避开 store_true 的限制
+parser.add_argument("--defense", type=int, default=0, help="1:Enable, 0:Disable")
+parser.add_argument("--mode", type=str, default="vGLO", choices=["vID", "vGLO"])
+parser.add_argument("--threshold", type=str, default="", help="Oracle threshold")
+args = parser.parse_args()
+
 system = System()
 system.clk_domain = SrcClockDomain(clock='3GHz', voltage_domain=VoltageDomain())
 system.mem_mode = 'timing'
@@ -35,10 +44,17 @@ system.l3cache.prefetcher = XptPrefetcher(
     # activation_threshold = 1,
 )
 
-# system.l3cache.prefetcher.enable_defense = False  # 攻击 baseline
-system.l3cache.prefetcher.enable_defense = True  # 开启防御
-# system.l3cache.prefetcher.is_vGLO = False  # vID 防御
-system.l3cache.prefetcher.is_vGLO = True  # vGLO 防御
+# # system.l3cache.prefetcher.enable_defense = False  # 攻击 baseline
+# system.l3cache.prefetcher.enable_defense = True  # 开启防御
+# # system.l3cache.prefetcher.is_vGLO = False  # vID 防御
+# system.l3cache.prefetcher.is_vGLO = True  # vGLO 防御
+
+# ... 系统配置 ...
+system.l3cache.prefetcher.enable_defense = bool(args.defense)
+# 根据参数决定是 vID 还是 vGLO
+if args.defense:
+    system.l3cache.prefetcher.is_vGLO = (args.mode == "vGLO")
+    print(f"[*] XPTGuard Active: Mode={args.mode}")
 
 # 3. CPU 私有缓存配置 [cite: 3, 7]
 for i, cpu in enumerate(system.cpu):
@@ -111,7 +127,15 @@ binary = './test'
 system.workload = SEWorkload.init_compatible(binary)
 
 # 修改点：只给核心 0 分配 workload
-process = Process(executable=binary, cmd=[binary], pid=100)
+# 如果有传入阈值，就加到命令行参数里
+if args.threshold and args.threshold.strip():
+    cmd_list = [binary, args.threshold]
+else:
+    cmd_list = [binary]
+
+process = Process(executable=binary, cmd=cmd_list, pid=100)
+
+# process = Process(executable=binary, cmd=[binary], pid=100)
 system.cpu[0].workload = process
 system.cpu[0].createThreads()
 
