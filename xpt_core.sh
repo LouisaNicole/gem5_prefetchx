@@ -6,7 +6,9 @@ rm -f $LOG_FILE
 echo "================ Experiment Started at $(date) ================" | tee -a $LOG_FILE
 
 # 编译
-gcc -O0 test.c -o test
+# gcc -O0 test.c -o test
+# 编译 (加入多线程支持和静态链接)
+gcc -O0 -pthread -static two_core_test.c -o two_core_test
 
 run_stage() {
     local mode=$1
@@ -14,18 +16,36 @@ run_stage() {
     local thresh=$3
     local tmp_log="tmp_exec.log"
 
+    # ADD: 定义调试日志文件名，例如 Baseline_debug.log
+    # local debug_log="${mode}_debug.log"
+
     echo -e "\n[RUNNING] Mode: $mode, Defense: $defense..." | tee -a $LOG_FILE
     
+    # ADD：
+    # 1. 在 gem5.opt 后面紧跟 --debug-flags
+    # 2. > $tmp_log 只捕获标准输出（用于脚本解析 Key 和延迟）
+    # 3. 2> $debug_log 将所有调试信息和错误重定向到独立文件
+    # if [ "$mode" == "Baseline" ]; then
+    #     ./build/X86/gem5.opt --debug-flags=HWPrefetch \
+    #         ./configs/run_cross_core.py --defense=0 \
+    #         > $tmp_log 2> $debug_log
+    # else
+    #     ./build/X86/gem5.opt --debug-flags=HWPrefetch \
+    #         ./configs/run_cross_core.py --defense=1 --mode=$mode --threshold=$thresh \
+    #         > $tmp_log 2> $debug_log
+    # fi
+
     if [ "$mode" == "Baseline" ]; then
-        ./build/X86/gem5.opt ./configs/run_prefetchx_merge.py --defense=0 > $tmp_log 2>&1
+        ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=0 > $tmp_log 2>&1
     else
-        ./build/X86/gem5.opt ./configs/run_prefetchx_merge.py --defense=1 --mode=$mode --threshold=$thresh > $tmp_log 2>&1
+        ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=1 --mode=$mode --threshold=$thresh > $tmp_log 2>&1
     fi
 
-    # 将详细延迟信息也存入总日志
+    # 保持后续逻辑不变，将程序输出（stdout）追加入总日志供查阅
     cat $tmp_log >> $LOG_FILE
 
     # --- 提取延迟统计信息 ---
+    # echo -e "\n[*] Debug info saved to: $debug_log" | tee -a $LOG_FILE
     echo -e "\n[*] Latency Analysis for $mode (Threshold: $thresh):" | tee -a $LOG_FILE
     echo "Bit | Avg Latency | Decision" | tee -a $LOG_FILE
     

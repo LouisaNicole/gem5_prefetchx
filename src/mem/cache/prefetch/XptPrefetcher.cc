@@ -63,6 +63,7 @@ void XptPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
 void XptPrefetcher::performBaselineInsert(Addr page_addr, uint32_t asid, uint32_t core_id) {
     int victim = -1;
+    DPRINTF(HWPrefetch, "=== XPTBaseline === page=0x%lx asid=%u core=%u\n", page_addr, asid, core_id);
     // 算法1: 寻找同ASID但不同Core的条目
     for (int i = 0; i < table.size(); i++) {
         if (table[i].asid == asid && table[i].coreId != core_id) {

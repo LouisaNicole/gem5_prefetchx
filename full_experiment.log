@@ -1,4 +1,4 @@
-================ Experiment Started at Fri Mar 27 14:42:55 CST 2026 ================
+================ Experiment Started at Mon Mar 30 16:12:14 CST 2026 ================
 
 [RUNNING] Mode: Baseline, Defense: 0...
 warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
@@ -6,6 +6,9 @@ warn: Base 10 memory/cache size 2MB will be cast to base 2 size 2MiB.
 warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
 warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
 warn: Base 10 memory/cache size 256kB will be cast to base 2 size 256KiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 256kB will be cast to base 2 size 256KiB.
 Global frequency set at 1000000000000 ticks per second
 src/mem/dram_interface.cc:690: warn: DRAM device capacity (16384 Mbytes) does not match the address range assigned (2048 Mbytes)
 src/base/statistics.hh:279: warn: One of the stats is a legacy stat. Legacy stat is a stat that does not belong to any statistics::Group. Legacy stat is deprecated.
@@ -14,69 +17,64 @@ gem5 Simulator System.  https://www.gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 25.0.0.1
-gem5 compiled Mar 27 2026 14:23:31
-gem5 started Mar 27 2026 14:42:55
-gem5 executing on DESKTOP-KCL9OPK, pid 13562
-command line: ./build/X86/gem5.opt ./configs/run_prefetchx_merge.py --defense=0
+gem5 compiled Mar 27 2026 17:06:50
+gem5 started Mar 30 2026 16:12:14
+gem5 executing on DESKTOP-KCL9OPK, pid 13033
+command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=0
 
 Beginning simulation!
-src/sim/mem_state.cc:443: info: Increasing stack size by one page.
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
 src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
 src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
 src/sim/mem_state.cc:443: info: Increasing stack size by one page.
-src/sim/mem_state.cc:443: info: Increasing stack size by one page.
-=== XPT STATISTICAL MULTI-ROUND ATTACK ===
-[ATTACK_DEBUG] attacker_pages[0] VADDR: 0x7ffff6e1d000 (page-aligned: 0x7ffff6e1d000)
-Target Key: 0x0f
+src/sim/syscall_emul.hh:1121: warn: readlink() called on '/proc/self/exe' may yield unexpected results in various settings.
+      Returning '/home/louisa/gem5/two_core_test'
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:97: warn: ignoring syscall rt_sigaction(...)
+      (further warnings will be suppressed)
+src/sim/syscall_emul.cc:97: warn: ignoring syscall rt_sigprocmask(...)
+      (further warnings will be suppressed)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/power_state.cc:105: warn: PowerState: Already in the requested power state, request ignored
+src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall madvise(...)
+=== XPT MULTI-CORE ATTACK (Attacker:Core0, Victim:Core1) ===
+Target Key: 0x00
 
 [*] Calibrating Base Latency...
-  Sample 01: 401
-  Sample 02: 401
-  Sample 03: 401
-  Sample 04: 401
-  Sample 05: 401
-  Sample 06: 401
-  Sample 07: 401
-  Sample 08: 401
-  Sample 09: 401
-  Sample 10: 401
-[*] Sorted Samples: 401 401 401 401 401 401 401 401 401 401 
-RESULT_THRESHOLD:441
-Round 01: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
-Round 02: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
-Round 03: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
-Round 04: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
-Round 05: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
-Round 06: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
-Round 07: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
-Round 08: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
-Round 09: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
-Round 10: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
-Round 11: 0(405) 0(405) 0(405) 0(405) 1(485) 1(485) 1(485) 1(485) 
+  Sample 01: 535
+  Sample 02: 535
+  Sample 03: 535
+  Sample 04: 535
+  Sample 05: 535
+RESULT_THRESHOLD:595
+Round 01: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
+Round 02: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
+Round 03: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
+Round 04: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
+Round 05: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
+Round 06: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
+Round 07: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
 
 === FINAL VOTING RESULTS ===
-Bit 0 | Votes: 11/11 | Final: 1 | OK
-Bit 1 | Votes: 11/11 | Final: 1 | OK
-Bit 2 | Votes: 11/11 | Final: 1 | OK
-Bit 3 | Votes: 11/11 | Final: 1 | OK
-Bit 4 | Votes:  0/11 | Final: 0 | OK
-Bit 5 | Votes:  0/11 | Final: 0 | OK
-Bit 6 | Votes:  0/11 | Final: 0 | OK
-Bit 7 | Votes:  0/11 | Final: 0 | OK
+Bit 0 | Votes:  0/ 7 | Final: 0 | OK
+Bit 1 | Votes:  0/ 7 | Final: 0 | OK
+Bit 2 | Votes:  0/ 7 | Final: 0 | OK
+Bit 3 | Votes:  0/ 7 | Final: 0 | OK
+Bit 4 | Votes:  0/ 7 | Final: 0 | OK
+Bit 5 | Votes:  0/ 7 | Final: 0 | OK
+Bit 6 | Votes:  0/ 7 | Final: 0 | OK
+Bit 7 | Votes:  0/ 7 | Final: 0 | OK
 
-Recovered Key: 0x0f (Target: 0x0f)
+Recovered Key: 0x00 (Target: 0x00)
 
 [*] Latency Analysis for Baseline (Threshold: ):
 Bit | Avg Latency | Decision
-Bit 7 | 405.0       | High (1)
-Bit 6 | 485.0       | High (1)
-Bit 5 | 485.0       | High (1)
-Bit 4 | 485.0       | High (1)
-Bit 3 | 485.0       | High (1)
+Bit 7 | 535.0       | High (1)
+Bit 6 | 535.0       | High (1)
+Bit 5 | 535.0       | High (1)
+Bit 4 | 535.0       | High (1)
+Bit 3 | 535.0       | High (1)
 
 [RUNNING] Mode: vID, Defense: 1...
 warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
@@ -84,70 +82,6 @@ warn: Base 10 memory/cache size 2MB will be cast to base 2 size 2MiB.
 warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
 warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
 warn: Base 10 memory/cache size 256kB will be cast to base 2 size 256KiB.
-Global frequency set at 1000000000000 ticks per second
-src/mem/dram_interface.cc:690: warn: DRAM device capacity (16384 Mbytes) does not match the address range assigned (2048 Mbytes)
-src/base/statistics.hh:279: warn: One of the stats is a legacy stat. Legacy stat is a stat that does not belong to any statistics::Group. Legacy stat is deprecated.
-system.remote_gdb: Listening for connections on port 7000
-gem5 Simulator System.  https://www.gem5.org
-gem5 is copyrighted software; use the --copyright option for details.
-
-gem5 version 25.0.0.1
-gem5 compiled Mar 27 2026 14:23:31
-gem5 started Mar 27 2026 14:43:09
-gem5 executing on DESKTOP-KCL9OPK, pid 13619
-command line: ./build/X86/gem5.opt ./configs/run_prefetchx_merge.py --defense=1 --mode=vID --threshold=441
-
-[*] XPTGuard Active: Mode=vID
-Beginning simulation!
-src/sim/mem_state.cc:443: info: Increasing stack size by one page.
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
-src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
-src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
-src/sim/mem_state.cc:443: info: Increasing stack size by one page.
-src/sim/mem_state.cc:443: info: Increasing stack size by one page.
-=== XPT STATISTICAL MULTI-ROUND ATTACK ===
-[ATTACK_DEBUG] attacker_pages[0] VADDR: 0x7ffff6e1d000 (page-aligned: 0x7ffff6e1d000)
-Target Key: 0x0f
-
-[*] Using Oracle Threshold: 441
-Round 01: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 02: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 03: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 04: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 05: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 06: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 07: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 08: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 09: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 10: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 11: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-
-=== FINAL VOTING RESULTS ===
-Bit 0 | Votes: 11/11 | Final: 1 | OK
-Bit 1 | Votes: 11/11 | Final: 1 | OK
-Bit 2 | Votes: 11/11 | Final: 1 | OK
-Bit 3 | Votes: 11/11 | Final: 1 | OK
-Bit 4 | Votes: 11/11 | Final: 1 | FAIL
-Bit 5 | Votes: 11/11 | Final: 1 | FAIL
-Bit 6 | Votes: 11/11 | Final: 1 | FAIL
-Bit 7 | Votes: 11/11 | Final: 1 | FAIL
-
-Recovered Key: 0xff (Target: 0x0f)
-
-[*] Latency Analysis for vID (Threshold: 441):
-Bit | Avg Latency | Decision
-Bit 7 | 485.0       | High (1)
-Bit 6 | 485.0       | High (1)
-Bit 5 | 485.0       | High (1)
-Bit 4 | 485.0       | High (1)
-Bit 3 | 485.0       | High (1)
-
-[RUNNING] Mode: vGLO, Defense: 1...
-warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
-warn: Base 10 memory/cache size 2MB will be cast to base 2 size 2MiB.
 warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
 warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
 warn: Base 10 memory/cache size 256kB will be cast to base 2 size 256KiB.
@@ -159,66 +93,138 @@ gem5 Simulator System.  https://www.gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 25.0.0.1
-gem5 compiled Mar 27 2026 14:23:31
-gem5 started Mar 27 2026 14:43:22
-gem5 executing on DESKTOP-KCL9OPK, pid 13654
-command line: ./build/X86/gem5.opt ./configs/run_prefetchx_merge.py --defense=1 --mode=vGLO --threshold=441
+gem5 compiled Mar 27 2026 17:06:50
+gem5 started Mar 30 2026 16:13:42
+gem5 executing on DESKTOP-KCL9OPK, pid 13257
+command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=1 --mode=vID --threshold=595
+
+[*] XPTGuard Active: Mode=vID
+Beginning simulation!
+src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+src/sim/syscall_emul.hh:1121: warn: readlink() called on '/proc/self/exe' may yield unexpected results in various settings.
+      Returning '/home/louisa/gem5/two_core_test'
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:97: warn: ignoring syscall rt_sigaction(...)
+      (further warnings will be suppressed)
+src/sim/syscall_emul.cc:97: warn: ignoring syscall rt_sigprocmask(...)
+      (further warnings will be suppressed)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/power_state.cc:105: warn: PowerState: Already in the requested power state, request ignored
+src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall madvise(...)
+=== XPT MULTI-CORE ATTACK (Attacker:Core0, Victim:Core1) ===
+Target Key: 0x00
+
+[*] Using Oracle Threshold: 595
+Round 01: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
+Round 02: 1(655) 1(655) 1(1122) 1(655) 1(655) 1(655) 1(655) 1(655) 
+Round 03: 1(655) 1(655) 1(655) 1(655) 1(655) 1(1122) 1(655) 1(655) 
+Round 04: 1(655) 1(655) 1(655) 1(655) 1(1122) 1(655) 1(655) 1(655) 
+Round 05: 1(1110) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
+Round 06: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
+Round 07: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
+
+=== FINAL VOTING RESULTS ===
+Bit 0 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 1 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 2 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 3 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 4 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 5 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 6 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 7 | Votes:  7/ 7 | Final: 1 | FAIL
+
+Recovered Key: 0xff (Target: 0x00)
+
+[*] Latency Analysis for vID (Threshold: 595):
+Bit | Avg Latency | Decision
+Bit 7 | 655.0       | High (1)
+Bit 6 | 721.7       | High (1)
+Bit 5 | 721.7       | High (1)
+Bit 4 | 655.0       | High (1)
+Bit 3 | 655.0       | High (1)
+
+[RUNNING] Mode: vGLO, Defense: 1...
+warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
+warn: Base 10 memory/cache size 2MB will be cast to base 2 size 2MiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 256kB will be cast to base 2 size 256KiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 32kB will be cast to base 2 size 32KiB.
+warn: Base 10 memory/cache size 256kB will be cast to base 2 size 256KiB.
+Global frequency set at 1000000000000 ticks per second
+src/mem/dram_interface.cc:690: warn: DRAM device capacity (16384 Mbytes) does not match the address range assigned (2048 Mbytes)
+src/base/statistics.hh:279: warn: One of the stats is a legacy stat. Legacy stat is a stat that does not belong to any statistics::Group. Legacy stat is deprecated.
+system.remote_gdb: Listening for connections on port 7000
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 25.0.0.1
+gem5 compiled Mar 27 2026 17:06:50
+gem5 started Mar 30 2026 16:15:04
+gem5 executing on DESKTOP-KCL9OPK, pid 13460
+command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=1 --mode=vGLO --threshold=595
 
 [*] XPTGuard Active: Mode=vGLO
 Beginning simulation!
-src/sim/mem_state.cc:443: info: Increasing stack size by one page.
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
 src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
 src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
-src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
 src/sim/mem_state.cc:443: info: Increasing stack size by one page.
-src/sim/mem_state.cc:443: info: Increasing stack size by one page.
-=== XPT STATISTICAL MULTI-ROUND ATTACK ===
-[ATTACK_DEBUG] attacker_pages[0] VADDR: 0x7ffff6e1d000 (page-aligned: 0x7ffff6e1d000)
-Target Key: 0x0f
+src/sim/syscall_emul.hh:1121: warn: readlink() called on '/proc/self/exe' may yield unexpected results in various settings.
+      Returning '/home/louisa/gem5/two_core_test'
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/syscall_emul.cc:97: warn: ignoring syscall rt_sigaction(...)
+      (further warnings will be suppressed)
+src/sim/syscall_emul.cc:97: warn: ignoring syscall rt_sigprocmask(...)
+      (further warnings will be suppressed)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall mprotect(...)
+src/sim/power_state.cc:105: warn: PowerState: Already in the requested power state, request ignored
+src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
+src/sim/syscall_emul.cc:86: warn: ignoring syscall madvise(...)
+=== XPT MULTI-CORE ATTACK (Attacker:Core0, Victim:Core1) ===
+Target Key: 0x00
 
-[*] Using Oracle Threshold: 441
-Round 01: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 02: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 03: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 04: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 05: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 06: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 07: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 08: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 09: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 10: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
-Round 11: 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 1(485) 
+[*] Using Oracle Threshold: 595
+Round 01: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
+Round 02: 1(655) 1(655) 1(1122) 1(655) 1(655) 1(655) 1(655) 1(655) 
+Round 03: 1(655) 1(655) 1(655) 1(655) 1(655) 1(1122) 1(655) 1(655) 
+Round 04: 1(655) 1(655) 1(655) 1(655) 1(1122) 1(655) 1(655) 1(655) 
+Round 05: 1(1110) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
+Round 06: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
+Round 07: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
 
 === FINAL VOTING RESULTS ===
-Bit 0 | Votes: 11/11 | Final: 1 | OK
-Bit 1 | Votes: 11/11 | Final: 1 | OK
-Bit 2 | Votes: 11/11 | Final: 1 | OK
-Bit 3 | Votes: 11/11 | Final: 1 | OK
-Bit 4 | Votes: 11/11 | Final: 1 | FAIL
-Bit 5 | Votes: 11/11 | Final: 1 | FAIL
-Bit 6 | Votes: 11/11 | Final: 1 | FAIL
-Bit 7 | Votes: 11/11 | Final: 1 | FAIL
+Bit 0 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 1 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 2 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 3 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 4 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 5 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 6 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 7 | Votes:  7/ 7 | Final: 1 | FAIL
 
-Recovered Key: 0xff (Target: 0x0f)
+Recovered Key: 0xff (Target: 0x00)
 
-[*] Latency Analysis for vGLO (Threshold: 441):
+[*] Latency Analysis for vGLO (Threshold: 595):
 Bit | Avg Latency | Decision
-Bit 7 | 485.0       | High (1)
-Bit 6 | 485.0       | High (1)
-Bit 5 | 485.0       | High (1)
-Bit 4 | 485.0       | High (1)
-Bit 3 | 485.0       | High (1)
+Bit 7 | 655.0       | High (1)
+Bit 6 | 721.7       | High (1)
+Bit 5 | 721.7       | High (1)
+Bit 4 | 655.0       | High (1)
+Bit 3 | 655.0       | High (1)
 
 
 ----------------------------------------------------------------
 | Mode     | Threshold | Target Key | Recovered | Status       |
 ----------------------------------------------------------------
-| Baseline | 441       | 0x0f       | 0x0f      | SUCCESS      |
-| vID      | 441       | 0x0f       | 0xff      | BLOCK (Pass) |
-| vGLO     | 441       | 0x0f       | 0xff      | BLOCK (Pass) |
+| Baseline | 595       | 0x00       | 0x00      | SUCCESS      |
+| vID      | 595       | 0x00       | 0xff      | BLOCK (Pass) |
+| vGLO     | 595       | 0x00       | 0xff      | BLOCK (Pass) |
 ----------------------------------------------------------------
 
-================ Experiment Ended at Fri Mar 27 14:43:34 CST 2026 ================
+================ Experiment Ended at Mon Mar 30 16:16:27 CST 2026 ================
