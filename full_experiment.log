@@ -1,4 +1,4 @@
-================ Experiment Started at Mon Mar 30 16:12:14 CST 2026 ================
+================ Experiment Started at Thu Apr  2 10:57:09 CST 2026 ================
 
 [RUNNING] Mode: Baseline, Defense: 0...
 warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
@@ -18,8 +18,8 @@ gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 25.0.0.1
 gem5 compiled Mar 27 2026 17:06:50
-gem5 started Mar 30 2026 16:12:14
-gem5 executing on DESKTOP-KCL9OPK, pid 13033
+gem5 started Apr  2 2026 10:57:10
+gem5 executing on DESKTOP-KCL9OPK, pid 17439
 command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=0
 
 Beginning simulation!
@@ -42,19 +42,19 @@ src/sim/syscall_emul.cc:86: warn: ignoring syscall madvise(...)
 Target Key: 0x00
 
 [*] Calibrating Base Latency...
-  Sample 01: 535
-  Sample 02: 535
-  Sample 03: 535
-  Sample 04: 535
-  Sample 05: 535
-RESULT_THRESHOLD:595
-Round 01: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
-Round 02: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
-Round 03: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
-Round 04: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
-Round 05: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
-Round 06: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
-Round 07: 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 0(535) 
+  Sample 01: 465
+  Sample 02: 465
+  Sample 03: 465
+  Sample 04: 465
+  Sample 05: 465
+RESULT_THRESHOLD:490
+Round 01: 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 
+Round 02: 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 
+Round 03: 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 
+Round 04: 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 
+Round 05: 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 
+Round 06: 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 
+Round 07: 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 0(465) 
 
 === FINAL VOTING RESULTS ===
 Bit 0 | Votes:  0/ 7 | Final: 0 | OK
@@ -70,11 +70,11 @@ Recovered Key: 0x00 (Target: 0x00)
 
 [*] Latency Analysis for Baseline (Threshold: ):
 Bit | Avg Latency | Decision
-Bit 7 | 535.0       | High (1)
-Bit 6 | 535.0       | High (1)
-Bit 5 | 535.0       | High (1)
-Bit 4 | 535.0       | High (1)
-Bit 3 | 535.0       | High (1)
+Bit 7 | 465.0       | High (1)
+Bit 6 | 465.0       | High (1)
+Bit 5 | 465.0       | High (1)
+Bit 4 | 465.0       | High (1)
+Bit 3 | 465.0       | High (1)
 
 [RUNNING] Mode: vID, Defense: 1...
 warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
@@ -94,9 +94,9 @@ gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 25.0.0.1
 gem5 compiled Mar 27 2026 17:06:50
-gem5 started Mar 30 2026 16:13:42
-gem5 executing on DESKTOP-KCL9OPK, pid 13257
-command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=1 --mode=vID --threshold=595
+gem5 started Apr  2 2026 10:58:20
+gem5 executing on DESKTOP-KCL9OPK, pid 17680
+command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=1 --mode=vID --threshold=490
 
 [*] XPTGuard Active: Mode=vID
 Beginning simulation!
@@ -118,14 +118,14 @@ src/sim/syscall_emul.cc:86: warn: ignoring syscall madvise(...)
 === XPT MULTI-CORE ATTACK (Attacker:Core0, Victim:Core1) ===
 Target Key: 0x00
 
-[*] Using Oracle Threshold: 595
-Round 01: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
-Round 02: 1(655) 1(655) 1(1122) 1(655) 1(655) 1(655) 1(655) 1(655) 
-Round 03: 1(655) 1(655) 1(655) 1(655) 1(655) 1(1122) 1(655) 1(655) 
-Round 04: 1(655) 1(655) 1(655) 1(655) 1(1122) 1(655) 1(655) 1(655) 
-Round 05: 1(1110) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
-Round 06: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
-Round 07: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
+[*] Using Oracle Threshold: 490
+Round 01: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 02: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 03: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 04: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 05: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 06: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 07: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
 
 === FINAL VOTING RESULTS ===
 Bit 0 | Votes:  7/ 7 | Final: 1 | FAIL
@@ -139,13 +139,13 @@ Bit 7 | Votes:  7/ 7 | Final: 1 | FAIL
 
 Recovered Key: 0xff (Target: 0x00)
 
-[*] Latency Analysis for vID (Threshold: 595):
+[*] Latency Analysis for vID (Threshold: 490):
 Bit | Avg Latency | Decision
-Bit 7 | 655.0       | High (1)
-Bit 6 | 721.7       | High (1)
-Bit 5 | 721.7       | High (1)
-Bit 4 | 655.0       | High (1)
-Bit 3 | 655.0       | High (1)
+Bit 7 | 515.0       | High (1)
+Bit 6 | 515.0       | High (1)
+Bit 5 | 515.0       | High (1)
+Bit 4 | 515.0       | High (1)
+Bit 3 | 515.0       | High (1)
 
 [RUNNING] Mode: vGLO, Defense: 1...
 warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
@@ -165,9 +165,9 @@ gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 25.0.0.1
 gem5 compiled Mar 27 2026 17:06:50
-gem5 started Mar 30 2026 16:15:04
-gem5 executing on DESKTOP-KCL9OPK, pid 13460
-command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=1 --mode=vGLO --threshold=595
+gem5 started Apr  2 2026 10:59:26
+gem5 executing on DESKTOP-KCL9OPK, pid 17962
+command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=1 --mode=vGLO --threshold=490
 
 [*] XPTGuard Active: Mode=vGLO
 Beginning simulation!
@@ -189,14 +189,14 @@ src/sim/syscall_emul.cc:86: warn: ignoring syscall madvise(...)
 === XPT MULTI-CORE ATTACK (Attacker:Core0, Victim:Core1) ===
 Target Key: 0x00
 
-[*] Using Oracle Threshold: 595
-Round 01: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
-Round 02: 1(655) 1(655) 1(1122) 1(655) 1(655) 1(655) 1(655) 1(655) 
-Round 03: 1(655) 1(655) 1(655) 1(655) 1(655) 1(1122) 1(655) 1(655) 
-Round 04: 1(655) 1(655) 1(655) 1(655) 1(1122) 1(655) 1(655) 1(655) 
-Round 05: 1(1110) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
-Round 06: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
-Round 07: 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 1(655) 
+[*] Using Oracle Threshold: 490
+Round 01: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 02: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 03: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 04: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 05: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 06: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
+Round 07: 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 1(515) 
 
 === FINAL VOTING RESULTS ===
 Bit 0 | Votes:  7/ 7 | Final: 1 | FAIL
@@ -210,21 +210,21 @@ Bit 7 | Votes:  7/ 7 | Final: 1 | FAIL
 
 Recovered Key: 0xff (Target: 0x00)
 
-[*] Latency Analysis for vGLO (Threshold: 595):
+[*] Latency Analysis for vGLO (Threshold: 490):
 Bit | Avg Latency | Decision
-Bit 7 | 655.0       | High (1)
-Bit 6 | 721.7       | High (1)
-Bit 5 | 721.7       | High (1)
-Bit 4 | 655.0       | High (1)
-Bit 3 | 655.0       | High (1)
+Bit 7 | 515.0       | High (1)
+Bit 6 | 515.0       | High (1)
+Bit 5 | 515.0       | High (1)
+Bit 4 | 515.0       | High (1)
+Bit 3 | 515.0       | High (1)
 
 
 ----------------------------------------------------------------
 | Mode     | Threshold | Target Key | Recovered | Status       |
 ----------------------------------------------------------------
-| Baseline | 595       | 0x00       | 0x00      | SUCCESS      |
-| vID      | 595       | 0x00       | 0xff      | BLOCK (Pass) |
-| vGLO     | 595       | 0x00       | 0xff      | BLOCK (Pass) |
+| Baseline | 490       | 0x00       | 0x00      | SUCCESS      |
+| vID      | 490       | 0x00       | 0xff      | BLOCK (Pass) |
+| vGLO     | 490       | 0x00       | 0xff      | BLOCK (Pass) |
 ----------------------------------------------------------------
 
-================ Experiment Ended at Mon Mar 30 16:16:27 CST 2026 ================
+================ Experiment Ended at Thu Apr  2 11:00:33 CST 2026 ================

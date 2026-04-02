@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
 
         qsort(cal_samples, CALIBRATE_SAMPLES, sizeof(uint32_t), compare_uint32);
         uint32_t fast_median = cal_samples[CALIBRATE_SAMPLES / 2];
-        threshold = fast_median + 60; 
+        threshold = fast_median + 25; 
         printf("RESULT_THRESHOLD:%u\n", threshold);
     } else {
         printf("[*] Using Oracle Threshold: %u\n", threshold);
