@@ -14,7 +14,7 @@ Baseline:
 ./build/X86/gem5.opt ./configs/run_parsec.py --benchmark canneal --size simmedium --defense 0   3481530890094
 
 vID:
-./build/X86/gem5.opt ./configs/run_parsec.py --benchmark canneal --size simsmall --defense 1 --mode vID
+./build/X86/gem5.opt ./configs/run_parsec.py --benchmark fluidanimate --size simlarge --defense 1 --mode vID
 
 vGLO:
 ./build/X86/gem5.opt ./configs/run_parsec.py --benchmark blackscholes --size simsmall --defense 1 --mode vGLO

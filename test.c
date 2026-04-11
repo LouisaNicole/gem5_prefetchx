@@ -59,8 +59,11 @@ uint32_t probe_once(int bit, uint8_t secret_key,
     if (current_bit_val) {
         volatile char *vp = victim_base;
         for (int repeat = 0; repeat < 2; repeat++) { 
-            clflush(vp); mfence();
-            volatile char junk = *vp; mfence();
+            clflush(vp); 
+            mfence();
+            volatile char junk = *vp; 
+            (void)junk; // 防止编译器警告
+            mfence();
             busy_wait(100);
         }
     }

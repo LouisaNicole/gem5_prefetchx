@@ -5,10 +5,45 @@ namespace gem5 {
 namespace prefetch {
 
 XptPrefetcher::XptPrefetcher(const XptPrefetcherParams &p)
-    : Queued(p), numEntries(p.num_entries), threshold(p.activation_threshold),
-      enableDefense(p.enable_defense), isVGLO(p.is_vGLO), gen(std::random_device{}())
+    : Queued(p),
+      gen(std::random_device{}()),     // 1. gen 在前
+      numEntries(p.num_entries),       // 2. numEntries
+      threshold(p.activation_threshold),
+      isVGLO(p.is_vGLO),               // 3. isVGLO
+      enableDefense(p.enable_defense), // 4. enableDefense
+      xptStats(this)                   // 5. xptStats 最后 (因为在 .hh 的类末尾)
 {
     table.reserve(numEntries);
+}
+
+XptPrefetcher::XptStats::XptStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(totalXptHits, statistics::units::Count::get(), "Total XPT logical hits"),
+      ADD_STAT(guardedAccesses, statistics::units::Count::get(), "Blocked by XPTGuard")
+{
+    safetyInterventionRate
+        .name("safety_intervention_rate") 
+        .desc("Percentage of hits blocked for security");
+    
+    safetyInterventionRate = guardedAccesses / totalXptHits;
+
+    effectiveSpeedupRate
+        .name("effective_speedup_rate")
+        .desc("Percentage of hits that actually received bypass");
+
+    effectiveSpeedupRate = (totalXptHits - guardedAccesses) / totalXptHits;
+}
+
+uint32_t
+XptPrefetcher::getEntryOwnerId(Addr addr) const
+{
+    Addr page_addr = addr & ~0xFFF;
+    for (const auto& entry : table) {
+        if (entry.paddr == page_addr) {
+            return entry.asid; // 返回该页表项绑定的 Context ID
+        }
+    }
+    return 0; // 默认值
 }
 
 bool XptPrefetcher::isXptOptimizedHit(Addr addr) const
@@ -137,6 +172,7 @@ void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core
 
     int victim = -1;
     if (c > 0 && rand_x <= threshold) {
+        xptStats.guardedAccesses++; // 💡 记录这一次随机驱逐
         // 触发概率置换
         if (!isVGLO) {
             // vID: 找同(ASID, CoreID)最旧条目

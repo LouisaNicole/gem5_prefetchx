@@ -453,30 +453,17 @@ individual files in /usr/share/doc/*/copyright.
 Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
 applicable law.
 
-[PARSEC] Benchmarks to run:  parsec.canneal
+[PARSEC] Benchmarks to run:  parsec.blackscholes
 
-[PARSEC] [========== Running benchmark parsec.canneal [1] ==========]
+[PARSEC] [========== Running benchmark parsec.blackscholes [1] ==========]
 [PARSEC] Setting up run directory.
 [PARSEC] Unpacking benchmark input 'simlarge'.
-400000.nets
-[PARSEC] Running 'time /home/gem5/parsec-benchmark/pkgs/kernels/canneal/inst/amd64-linux.gcc-hooks/bin/canneal 2 15000 2000 400000.nets 128':
+in_64K.txt
+[PARSEC] Running 'time /home/gem5/parsec-benchmark/pkgs/apps/blackscholes/inst/amd64-linux.gcc-hooks/bin/blackscholes 2 in_64K.txt prices.txt':
 [PARSEC] [---------- Beginning of output ----------]
 PARSEC Benchmark Suite Version 3.0-beta-20150206
 [HOOKS] PARSEC Hooks Version 1.2
-Threadcount: 2
-15000 swaps per temperature step
-start temperature: 2000
-netlist filename: 400000.nets
-number of temperature steps: 128
-
-
-
-
-locs created
-locs assigned
-Just saw element: 100000
-Just saw element: 200000
-Just saw element: 300000
-Just saw element: 400000
-netlist created. 400000 elements.
+Num of Options: 65536
+Num of Runs: 100
+Size of data: 2621440
 [HOOKS] Entering ROI

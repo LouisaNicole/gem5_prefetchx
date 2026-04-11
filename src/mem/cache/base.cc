@@ -467,7 +467,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     // In case of a hit we are neglecting response latency.
     // In case of a miss we are neglecting forward latency.
     
-    // Tick request_time = clockEdge(lat);
+    // Tick request_time = clockEdge(lat); // 记得注释
     
     // Here we reset the timing of the packet.
     pkt->headerDelay = pkt->payloadDelay = 0;
@@ -495,21 +495,19 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         //         << " | XPT_HIT: " << (hit ? "YES" : "NO")
         //         << " | Final_Lat: " << std::dec << (hit ? 0 : 50) << std::endl;
 
+        // 找到 BaseCache::recvTimingReq 中处理 Miss Latency 的地方
         if (xpt && xpt->isXptOptimizedHit(pkt->getAddr())) {
-            // --- 场景 A: XPT 命中 (物理绕过) ---
-            // 强行将 lat 设为 0。
-            // 这意味着 request_time 也会是 0，Packet 会立即进入 Miss 处理流程
+            // 💡 记录一次逻辑命中
+            xpt->xptStats.totalXptHits++;
+            // --- 场景 A: 安全加速 ---
             lat = Cycles(0); 
-            // DPRINTF(HWPrefetch, "XPT BYPASS: Address %#x skipping lookup latency\n", pkt->getAddr());
-            // DPRINTF(HWPrefetch, "ADD XPT: Access Latency: %d cycles\n", lat);
+            pkt->headerDelay = 0;
+            pkt->payloadDelay = 0;
+            forward_time = clockEdge();
         } else {
-            // --- 场景 B: 普通 DRAM Miss (支付查找税) ---
-            // 强行将 lat 设为配置的 lookupLatency (50)
-            // 这意味着这个 Packet 必须在 L3 停留 50 周期后才能发往 DRAM
+            // --- 场景 B: 普通 Miss ---
             lat = lookupLatency;
-            forward_time += cyclesToTicks(lookupLatency);
-            pkt->headerDelay += cyclesToTicks(lookupLatency);
-            // DPRINTF(HWPrefetch, "NO XPT: Access Latency: %d cycles\n", lat);
+            forward_time = clockEdge(lookupLatency + forwardLatency);
         }
     }
     Tick request_time = clockEdge(lat);

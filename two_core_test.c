@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
         use_fixed_threshold = 1;
     }
 
-    uint8_t secret_key = 0x00; 
+    uint8_t secret_key = 0x96; 
     size_t mem_size = 4000 * PAGE_SIZE; 
     char *buffer = (char *)aligned_alloc(PAGE_SIZE, mem_size);
     memset(buffer, 0x55, mem_size);

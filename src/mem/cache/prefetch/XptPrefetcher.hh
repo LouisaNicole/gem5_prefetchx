@@ -5,6 +5,9 @@
 #include <random>
 #include "mem/cache/prefetch/queued.hh"
 #include "params/XptPrefetcher.hh"
+#include "base/statistics.hh"
+#include "base/stats/group.hh"
+#include "base/stats/units.hh"
 
 namespace gem5
 {
@@ -23,20 +26,32 @@ class XptPrefetcher : public Queued
         bool enabled;      
     };
 
-    const int numEntries;
-    const int threshold;
-    const bool enableDefense;
-    const bool isVGLO;
-    
     std::vector<XptEntry> table;
     std::mt19937 gen; // 随机数生成器
+    const int numEntries;
+    const int threshold;
+    const bool isVGLO;
+    const bool enableDefense;
 
     int findEntry(Addr page_addr);
     void performBaselineInsert(Addr page_addr, uint32_t asid, uint32_t core_id);
     void performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core_id);
 
   public:
+
+    uint32_t getEntryOwnerId(Addr addr) const;
+
     XptPrefetcher(const XptPrefetcherParams &p);
+    
+    struct XptStats : public statistics::Group {
+        XptStats(statistics::Group *parent);
+        statistics::Scalar totalXptHits;
+        statistics::Scalar guardedAccesses;
+        // 自动计算的指标
+        statistics::Formula safetyInterventionRate; // 拦截率：B/A
+        statistics::Formula effectiveSpeedupRate;   // 有效加速率：(A-B)/A
+    } xptStats; // 💡 变量名从 stats 改为 xptStats，避开父类冲突
+
     bool isXptOptimizedHit(Addr addr) const;
     void calculatePrefetch(const PrefetchInfo &pfi, 
                            std::vector<AddrPriority> &addresses,
