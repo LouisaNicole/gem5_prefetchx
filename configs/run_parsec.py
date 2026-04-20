@@ -46,7 +46,21 @@ args = parser.parse_args()
 # 路径配置
 local_disk_path = "/home/louisa/parsec-tests/prebuilt-image/parsec.img"
 local_vmlinux_path = "/home/louisa/parsec-tests/vmlinux"
-
+benchmark_choices = [
+    "blackscholes",
+    "bodytrack",
+    "canneal",
+    "dedup",
+    "facesim",
+    "ferret",
+    "fluidanimate",
+    "freqmine",
+    "raytrace",
+    "streamcluster",
+    "swaptions",
+    "vips",
+    "x264",
+]
 # --- 2. 自定义 Classic 三级缓存层级 ---
 from gem5.components.cachehierarchies.classic.abstract_classic_cache_hierarchy import AbstractClassicCacheHierarchy
 

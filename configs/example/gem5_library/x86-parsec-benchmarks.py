@@ -62,13 +62,14 @@ from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
+from gem5.resources.resource import KernelResource, DiskImageResource
 
 # We check for the required gem5 build.
 
 requires(
     isa_required=ISA.X86,
     coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL,
-    kvm_required=True,
+    kvm_required=False,
 )
 
 # Following are the list of benchmark programs for parsec.
@@ -146,7 +147,7 @@ memory = DualChannelDDR4_2400(size="3GiB")
 # cores for the command we wish to run after boot.
 
 processor = SimpleSwitchableProcessor(
-    starting_core_type=CPUTypes.KVM,
+    starting_core_type=CPUTypes.ATOMIC,
     switch_core_type=CPUTypes.TIMING,
     isa=ISA.X86,
     num_cores=2,
@@ -181,16 +182,19 @@ command = (
     + "sleep 5;"
     + "m5 exit;"
 )
+
+local_disk_path = "/home/louisa/parsec-tests/prebuilt-image/parsec.img"
+local_vmlinux_path = "/home/louisa/parsec-tests/vmlinux"
+
 board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
     # PARSEC benchamarks were tested with kernel version 4.19.83
-    kernel=obtain_resource(
-        "x86-linux-kernel-4.19.83", resource_version="1.0.0"
+    kernel=KernelResource(local_path=local_vmlinux_path),
+    disk_image=DiskImageResource(
+        local_path=local_disk_path,
+        root_partition="1" 
     ),
-    # The x86-parsec image will be automatically downloaded to the
-    # `~/.cache/gem5` directory if not already present.
-    disk_image=obtain_resource("x86-parsec", resource_version="1.0.0"),
     readfile_contents=command,
 )
 

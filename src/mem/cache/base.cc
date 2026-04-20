@@ -507,7 +507,8 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         } else {
             // --- 场景 B: 普通 Miss ---
             lat = lookupLatency;
-            forward_time = clockEdge(lookupLatency + forwardLatency);
+            forward_time = clockEdge(forwardLatency);
+            // 普通的话应该什么也不做？
         }
     }
     Tick request_time = clockEdge(lat);

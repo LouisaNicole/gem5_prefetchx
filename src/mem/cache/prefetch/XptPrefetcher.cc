@@ -19,7 +19,9 @@ XptPrefetcher::XptPrefetcher(const XptPrefetcherParams &p)
 XptPrefetcher::XptStats::XptStats(statistics::Group *parent)
     : statistics::Group(parent),
       ADD_STAT(totalXptHits, statistics::units::Count::get(), "Total XPT logical hits"),
-      ADD_STAT(guardedAccesses, statistics::units::Count::get(), "Blocked by XPTGuard")
+      ADD_STAT(guardedAccesses, statistics::units::Count::get(), "Blocked by XPTGuard"),
+      ADD_STAT(totalXptProbes, statistics::units::Count::get(), "Total number of Probes into XPT table"),
+      ADD_STAT(evictionCount, statistics::units::Count::get(), "Total number of evictions from XPT table")
 {
     safetyInterventionRate
         .name("safety_intervention_rate") 
@@ -79,6 +81,7 @@ void XptPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                  const CacheAccessor &cache) {
     Addr page_addr = pfi.getAddr() & ~0xFFF;
     int idx = findEntry(page_addr);
+    xptStats.totalXptProbes++;
 
     if (idx != -1) {
         // ✅ 记录已存在条目的更新（攻击者目标页会频繁出现在这里）
@@ -113,43 +116,17 @@ void XptPrefetcher::performBaselineInsert(Addr page_addr, uint32_t asid, uint32_
         }
     }
     if (victim != -1) {
+        // 记录一次驱逐
+        xptStats.evictionCount++;
         DPRINTF(HWPrefetch, "  [EVICT] idx=%d page=0x%lx enabled=%d missCnt=%d lastAccess=%ld\n",
                 victim, table[victim].paddr, table[victim].enabled, 
                 table[victim].missCounter, table[victim].lastAccess);
         table.erase(table.begin() + victim);
     }
+    // 记录一次插入
+    // xptStats.totalXptProbes++;
     table.push_back({page_addr, asid, core_id, 0, curTick(), false});
 }
-
-// void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core_id) {
-//     double c = (double)table.size();
-//     double n = (double)numEntries;
-
-//     std::uniform_real_distribution<double> dis(0.0, 1.0);
-//     double rand_val = dis(gen); // 生成 0.0 到 1.0 之间的随机数
-//     // double prob = 1.0 - pow(1.0 - (c/n), 2.0);
-//     double prob = c/n;
-//     DPRINTF(HWPrefetch, "=== XPTGuard === page=0x%lx asid=%u core=%u c=%d/n=%d P=%.3f r=%.3f trig=%s vGLO=%d\n",
-//             page_addr, asid, core_id, (int)c, numEntries, prob, rand_val, 
-//             (rand_val <= prob ? "YES" : "NO"), isVGLO);
-//     int victim = -1;
-//     if (c > 0 && rand_val <= prob) {
-//         victim = 0;
-//         for (int i = 0; i < table.size(); i++) {
-//             if (table[i].lastAccess < table[victim].lastAccess) victim = i;
-//         }
-//     }
-//     if (victim != -1) {
-//         DPRINTF(HWPrefetch, "  [EVICT] idx=%d page=0x%lx enabled=%d missCnt=%d lastAccess=%ld\n",
-//                 victim, table[victim].paddr, table[victim].enabled, 
-//                 table[victim].missCounter, table[victim].lastAccess);
-//         table.erase(table.begin() + victim);
-//     }
-//     DPRINTF(HWPrefetch, "  [INSERT] page=0x%lx -> table size: %d/%d\n",
-//             page_addr, (int)table.size()+1, numEntries);
-//     table.push_back({page_addr, asid, core_id, 0, curTick(), false});
-//     DPRINTF(HWPrefetch, "=== XPTGuard END ===\n");
-// }
 
 void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core_id) {
     double c = (double)table.size();
@@ -221,6 +198,7 @@ void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core
     // 如果表满且未触发概率置换，则回退全局LRU
     else {
         if (table.size() >= numEntries) {
+            xptStats.evictionCount++; // 记录正常满载驱逐
             victim = 0;
             for (int i = 1; i < (int)table.size(); i++) {
                 if (table[i].lastAccess < table[victim].lastAccess)
@@ -232,6 +210,8 @@ void XptPrefetcher::performXPTGuard(Addr page_addr, uint32_t asid, uint32_t core
         DPRINTF(HWPrefetch, "  [INSERT] page=0x%lx -> table size: %d/%d\n", page_addr, (int)table.size()+1, numEntries);
         table.push_back({page_addr, asid, core_id, 0, curTick(), false});
     }
+    // 最后统一记录插入
+    // xptStats.totalXptProbes++;
     DPRINTF(HWPrefetch, "=== XPTGuard END ===\n");
 }
 

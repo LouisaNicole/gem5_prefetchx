@@ -47,6 +47,9 @@ class XptPrefetcher : public Queued
         XptStats(statistics::Group *parent);
         statistics::Scalar totalXptHits;
         statistics::Scalar guardedAccesses;
+        // --- 新增统计项 ---
+        statistics::Scalar totalXptProbes;   // 记录所有条目动作（含置换）
+        statistics::Scalar evictionCount;  // 记录所有驱逐动作
         // 自动计算的指标
         statistics::Formula safetyInterventionRate; // 拦截率：B/A
         statistics::Formula effectiveSpeedupRate;   // 有效加速率：(A-B)/A
