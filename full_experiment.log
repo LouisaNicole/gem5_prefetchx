@@ -1,4 +1,4 @@
-================ Experiment Started at Mon Apr 27 13:47:30 CST 2026 ================
+================ Experiment Started at Mon Apr 27 17:21:59 CST 2026 ================
 
 [RUNNING] Mode: Baseline, Defense: 0...
 warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
@@ -19,8 +19,8 @@ gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 25.0.0.1
 gem5 compiled Apr 14 2026 16:48:02
-gem5 started Apr 27 2026 13:47:30
-gem5 executing on DESKTOP-C7H0ROC, pid 17494
+gem5 started Apr 27 2026 17:22:00
+gem5 executing on DESKTOP-C7H0ROC, pid 14861
 command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=0
 
 Beginning simulation!
@@ -40,7 +40,7 @@ src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
 src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
 src/sim/syscall_emul.cc:86: warn: ignoring syscall madvise(...)
 === XPT MULTI-CORE ATTACK (Attacker:Core0, Victim:Core1) ===
-Target Key: 0x96
+Target Key: 0x00
 
 [*] Calibrating Base Latency...
   Sample 01: 402
@@ -53,34 +53,34 @@ Target Key: 0x96
   Sample 08: 402
   Sample 09: 402
   Sample 10: 402
-RESULT_THRESHOLD:432
-Round 01: 1(461) 0(402) 0(402) 1(461) 0(402) 1(461) 1(461) 0(402) 
-Round 02: 1(461) 0(402) 0(402) 1(461) 0(402) 1(461) 1(779) 1(644) 
-Round 03: 1(461) 0(402) 0(402) 1(461) 0(402) 1(461) 1(461) 0(402) 
-Round 04: 1(461) 0(402) 0(402) 1(461) 1(583) 1(461) 1(461) 0(402) 
-Round 05: 1(461) 0(402) 0(402) 1(461) 0(402) 1(461) 1(767) 1(584) 
-Round 06: 1(461) 0(402) 0(402) 1(461) 0(402) 1(1327) 1(461) 0(402) 
-Round 07: 1(461) 0(402) 0(402) 1(461) 1(583) 1(461) 1(461) 0(402) 
+RESULT_THRESHOLD:427
+Round 01: 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 
+Round 02: 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 
+Round 03: 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 
+Round 04: 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 
+Round 05: 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 
+Round 06: 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 
+Round 07: 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 0(402) 
 
 === FINAL VOTING RESULTS ===
-Bit 0 | Votes:  2/ 7 | Final: 0 | OK
-Bit 1 | Votes:  7/ 7 | Final: 1 | OK
-Bit 2 | Votes:  7/ 7 | Final: 1 | OK
-Bit 3 | Votes:  2/ 7 | Final: 0 | OK
-Bit 4 | Votes:  7/ 7 | Final: 1 | OK
+Bit 0 | Votes:  0/ 7 | Final: 0 | OK
+Bit 1 | Votes:  0/ 7 | Final: 0 | OK
+Bit 2 | Votes:  0/ 7 | Final: 0 | OK
+Bit 3 | Votes:  0/ 7 | Final: 0 | OK
+Bit 4 | Votes:  0/ 7 | Final: 0 | OK
 Bit 5 | Votes:  0/ 7 | Final: 0 | OK
 Bit 6 | Votes:  0/ 7 | Final: 0 | OK
-Bit 7 | Votes:  7/ 7 | Final: 1 | OK
+Bit 7 | Votes:  0/ 7 | Final: 0 | OK
 
-Recovered Key: 0x96 (Target: 0x96)
+Recovered Key: 0x00 (Target: 0x00)
 
 [*] Latency Analysis for Baseline (Threshold: ):
 Bit | Avg Latency | Decision
-Bit 7 | 461.0       | High (1)
-Bit 6 | 453.7       | High (1)
-Bit 5 | 584.7       | High (1)
-Bit 4 | 550.1       | High (1)
-Bit 3 | 462.6       | High (1)
+Bit 7 | 402.0       | High (1)
+Bit 6 | 402.0       | High (1)
+Bit 5 | 402.0       | High (1)
+Bit 4 | 402.0       | High (1)
+Bit 3 | 402.0       | High (1)
 
 [RUNNING] Mode: vID, Defense: 1...
 warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
@@ -101,9 +101,9 @@ gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 25.0.0.1
 gem5 compiled Apr 14 2026 16:48:02
-gem5 started Apr 27 2026 13:49:17
-gem5 executing on DESKTOP-C7H0ROC, pid 17838
-command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=1 --mode=vID --threshold=432
+gem5 started Apr 27 2026 17:23:51
+gem5 executing on DESKTOP-C7H0ROC, pid 15286
+command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=1 --mode=vID --threshold=427
 
 [*] XPTGuard Active: Mode=vID
 Beginning simulation!
@@ -123,36 +123,36 @@ src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
 src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
 src/sim/syscall_emul.cc:86: warn: ignoring syscall madvise(...)
 === XPT MULTI-CORE ATTACK (Attacker:Core0, Victim:Core1) ===
-Target Key: 0x96
+Target Key: 0x00
 
-[*] Using Oracle Threshold: 432
-Round 01: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 02: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 03: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 04: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 05: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 06: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 07: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
+[*] Using Oracle Threshold: 427
+Round 01: 1(451) 1(451) 1(451) 1(1443) 1(451) 1(451) 1(451) 1(451) 
+Round 02: 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(1433) 1(451) 
+Round 03: 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 
+Round 04: 1(451) 1(1421) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 
+Round 05: 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(1422) 1(451) 
+Round 06: 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 
+Round 07: 1(451) 1(1421) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 
 
 === FINAL VOTING RESULTS ===
 Bit 0 | Votes:  7/ 7 | Final: 1 | FAIL
-Bit 1 | Votes:  7/ 7 | Final: 1 | OK
-Bit 2 | Votes:  7/ 7 | Final: 1 | OK
+Bit 1 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 2 | Votes:  7/ 7 | Final: 1 | FAIL
 Bit 3 | Votes:  7/ 7 | Final: 1 | FAIL
-Bit 4 | Votes:  7/ 7 | Final: 1 | OK
+Bit 4 | Votes:  7/ 7 | Final: 1 | FAIL
 Bit 5 | Votes:  7/ 7 | Final: 1 | FAIL
 Bit 6 | Votes:  7/ 7 | Final: 1 | FAIL
-Bit 7 | Votes:  7/ 7 | Final: 1 | OK
+Bit 7 | Votes:  7/ 7 | Final: 1 | FAIL
 
-Recovered Key: 0xff (Target: 0x96)
+Recovered Key: 0xff (Target: 0x00)
 
-[*] Latency Analysis for vID (Threshold: 432):
+[*] Latency Analysis for vID (Threshold: 427):
 Bit | Avg Latency | Decision
-Bit 7 | 461.0       | High (1)
-Bit 6 | 461.0       | High (1)
-Bit 5 | 461.0       | High (1)
-Bit 4 | 461.0       | High (1)
-Bit 3 | 461.0       | High (1)
+Bit 7 | 592.7       | High (1)
+Bit 6 | 451.0       | High (1)
+Bit 5 | 451.0       | High (1)
+Bit 4 | 730.0       | High (1)
+Bit 3 | 451.0       | High (1)
 
 [RUNNING] Mode: vGLO, Defense: 1...
 warn: Base 10 memory/cache size 2GB will be cast to base 2 size 2GiB.
@@ -173,9 +173,9 @@ gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 25.0.0.1
 gem5 compiled Apr 14 2026 16:48:02
-gem5 started Apr 27 2026 13:50:49
-gem5 executing on DESKTOP-C7H0ROC, pid 18183
-command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=1 --mode=vGLO --threshold=432
+gem5 started Apr 27 2026 17:25:30
+gem5 executing on DESKTOP-C7H0ROC, pid 15714
+command line: ./build/X86/gem5.opt ./configs/run_cross_core.py --defense=1 --mode=vGLO --threshold=427
 
 [*] XPTGuard Active: Mode=vGLO
 Beginning simulation!
@@ -195,44 +195,44 @@ src/sim/syscall_emul.cc:86: warn: ignoring syscall rseq(...)
 src/sim/syscall_emul.cc:86: warn: ignoring syscall set_robust_list(...)
 src/sim/syscall_emul.cc:86: warn: ignoring syscall madvise(...)
 === XPT MULTI-CORE ATTACK (Attacker:Core0, Victim:Core1) ===
-Target Key: 0x96
+Target Key: 0x00
 
-[*] Using Oracle Threshold: 432
-Round 01: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 02: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 03: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 04: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 05: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 06: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
-Round 07: 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 1(461) 
+[*] Using Oracle Threshold: 427
+Round 01: 1(451) 1(451) 1(451) 1(1443) 1(451) 1(451) 1(451) 1(451) 
+Round 02: 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(1433) 1(451) 
+Round 03: 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 
+Round 04: 1(451) 1(1421) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 
+Round 05: 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(1422) 1(451) 
+Round 06: 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 
+Round 07: 1(451) 1(1421) 1(451) 1(451) 1(451) 1(451) 1(451) 1(451) 
 
 === FINAL VOTING RESULTS ===
 Bit 0 | Votes:  7/ 7 | Final: 1 | FAIL
-Bit 1 | Votes:  7/ 7 | Final: 1 | OK
-Bit 2 | Votes:  7/ 7 | Final: 1 | OK
+Bit 1 | Votes:  7/ 7 | Final: 1 | FAIL
+Bit 2 | Votes:  7/ 7 | Final: 1 | FAIL
 Bit 3 | Votes:  7/ 7 | Final: 1 | FAIL
-Bit 4 | Votes:  7/ 7 | Final: 1 | OK
+Bit 4 | Votes:  7/ 7 | Final: 1 | FAIL
 Bit 5 | Votes:  7/ 7 | Final: 1 | FAIL
 Bit 6 | Votes:  7/ 7 | Final: 1 | FAIL
-Bit 7 | Votes:  7/ 7 | Final: 1 | OK
+Bit 7 | Votes:  7/ 7 | Final: 1 | FAIL
 
-Recovered Key: 0xff (Target: 0x96)
+Recovered Key: 0xff (Target: 0x00)
 
-[*] Latency Analysis for vGLO (Threshold: 432):
+[*] Latency Analysis for vGLO (Threshold: 427):
 Bit | Avg Latency | Decision
-Bit 7 | 461.0       | High (1)
-Bit 6 | 461.0       | High (1)
-Bit 5 | 461.0       | High (1)
-Bit 4 | 461.0       | High (1)
-Bit 3 | 461.0       | High (1)
+Bit 7 | 592.7       | High (1)
+Bit 6 | 451.0       | High (1)
+Bit 5 | 451.0       | High (1)
+Bit 4 | 730.0       | High (1)
+Bit 3 | 451.0       | High (1)
 
 
 ----------------------------------------------------------------
 | Mode     | Threshold | Target Key | Recovered | Status       |
 ----------------------------------------------------------------
-| Baseline | 432       | 0x96       | 0x96      | SUCCESS      |
-| vID      | 432       | 0x96       | 0xff      | BLOCK (Pass) |
-| vGLO     | 432       | 0x96       | 0xff      | BLOCK (Pass) |
+| Baseline | 427       | 0x00       | 0x00      | SUCCESS      |
+| vID      | 427       | 0x00       | 0xff      | BLOCK (Pass) |
+| vGLO     | 427       | 0x00       | 0xff      | BLOCK (Pass) |
 ----------------------------------------------------------------
 
-================ Experiment Ended at Mon Apr 27 13:52:23 CST 2026 ================
+================ Experiment Ended at Mon Apr 27 17:27:08 CST 2026 ================

@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
         use_fixed_threshold = 1;
     }
 
-    uint8_t secret_key = 0x96; 
+    uint8_t secret_key = 0x00; 
     size_t mem_size = 4000 * PAGE_SIZE; 
     char *buffer = (char *)aligned_alloc(PAGE_SIZE, mem_size);
     memset(buffer, 0x55, mem_size);
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
 
         qsort(cal_samples, CALIBRATE_SAMPLES, sizeof(uint32_t), compare_uint32);
         uint32_t fast_median = cal_samples[CALIBRATE_SAMPLES / 2];
-        threshold = fast_median + 30; 
+        threshold = fast_median + 25; 
         printf("RESULT_THRESHOLD:%u\n", threshold);
     } else {
         printf("[*] Using Oracle Threshold: %u\n", threshold);

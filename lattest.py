@@ -10,8 +10,8 @@ plt.rcParams["font.family"] = "serif"
 bits = np.arange(8)
 # Baseline medians based on your log: 1 -> 461, 0 -> 402
 # Key 0x96 binary (LSB to MSB): 0, 1, 1, 0, 1, 0, 0, 1
-baseline_medians = [402, 461, 461, 402, 461, 402, 402, 461]
-defense_medians = [461] * 8
+baseline_medians = [402, 451, 451, 402, 451, 402, 402, 451]
+defense_medians = [451] * 8
 
 fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -43,7 +43,7 @@ ax.plot(
 
 # 3. Plot Threshold Reference
 ax.axhline(
-    y=432, color="#467821", linestyle=":", linewidth=2, label="Threshold (432)"
+    y=427, color="#467821", linestyle=":", linewidth=2, label="Threshold (427)"
 )
 
 # 4. Final Decorations
@@ -60,7 +60,7 @@ ax.set_ylim(360, 500)
 
 # Annotate Bit values on top of Baseline markers
 for i, lat in enumerate(baseline_medians):
-    val = "1" if lat > 432 else "0"
+    val = "1" if lat > 427 else "0"
     ax.text(i, lat + 8, val, ha="center", color="#E24A33", fontweight="bold")
 
 ax.legend(loc="lower right", frameon=True, facecolor="white")
