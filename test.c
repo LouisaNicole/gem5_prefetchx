@@ -8,7 +8,7 @@
 #define XPT_SIZE 256
 #define THRESHOLD_VAL 32
 #define KEY_BITS 8
-#define DUMMY_SIZE 128 
+#define DUMMY_SIZE 128
 
 // 攻击配置
 #define NUM_ROUNDS 7    // 总共测 7 轮（奇数方便投票）
@@ -43,11 +43,11 @@ void flush_hardware_state(volatile char **dummy_pages) {
 }
 
 // 单次探测函数：bit 决定位置，dry_run 为 1 时强制不触发受害者（用于校准）
-uint32_t probe_once(int bit, uint8_t secret_key, 
-                    volatile char **attacker_pages, 
+uint32_t probe_once(int bit, uint8_t secret_key,
+                    volatile char **attacker_pages,
                     volatile char *victim_base,
                     volatile char **dummy_pages,
-                    int dry_run) 
+                    int dry_run)
 {
     flush_hardware_state(dummy_pages);
 
@@ -58,10 +58,10 @@ uint32_t probe_once(int bit, uint8_t secret_key,
     int current_bit_val = dry_run ? 0 : ((secret_key >> bit) & 1);
     if (current_bit_val) {
         volatile char *vp = victim_base;
-        for (int repeat = 0; repeat < 2; repeat++) { 
-            clflush(vp); 
+        for (int repeat = 0; repeat < 2; repeat++) {
+            clflush(vp);
             mfence();
-            volatile char junk = *vp; 
+            volatile char junk = *vp;
             (void)junk; // 防止编译器警告
             mfence();
             busy_wait(100);
@@ -71,7 +71,7 @@ uint32_t probe_once(int bit, uint8_t secret_key,
     // 3. Probe
     busy_wait(150);
     clflush(attacker_pages[0]); mfence(); lfence();
-    
+
     uint64_t start = rdtscp();
     lfence();
     volatile char junk = *attacker_pages[0]; mfence();
@@ -90,7 +90,14 @@ int main(int argc, char *argv[]) {
     }
 
     uint8_t secret_key = 0xef; // 目标密钥
-    size_t mem_size = 4000 * PAGE_SIZE; 
+        if (argc > 1) {
+        // 假设 Python 把 secret_key 作为第一个参数传入
+        // ./two_core_test <secret_key_hex>
+        secret_key = (uint8_t)strtol(argv[1], NULL, 16);
+    }
+    printf("Target Key: 0x%02x\n\n", secret_key);
+
+    size_t mem_size = 4000 * PAGE_SIZE;
     char *buffer = (char *)aligned_alloc(PAGE_SIZE, mem_size);
     memset(buffer, 0x55, mem_size);
 
@@ -104,15 +111,15 @@ int main(int argc, char *argv[]) {
     int vote_box[KEY_BITS] = {0};
 
     printf("=== XPT STATISTICAL MULTI-ROUND ATTACK ===\n");
-    printf("[ATTACK_DEBUG] attacker_pages[0] VADDR: %p (page-aligned: %p)\n", 
-        attacker_pages[0], 
+    printf("[ATTACK_DEBUG] attacker_pages[0] VADDR: %p (page-aligned: %p)\n",
+        attacker_pages[0],
         (void*)((uintptr_t)attacker_pages[0] & ~0xFFF));
     printf("Target Key: 0x%02x\n\n", secret_key);
 
     // --- 第一步：校准 ---
     if (!use_fixed_threshold) {
         printf("[*] Calibrating Base Latency...\n");
-    
+
         uint32_t cal_samples[CALIBRATE_SAMPLES];
         for(int i = 0; i < CALIBRATE_SAMPLES; i++) {
             cal_samples[i] = probe_once(0, 0, attacker_pages, victim_base, dummy_pages, 1);
@@ -122,15 +129,15 @@ int main(int argc, char *argv[]) {
 
         // 排序
         qsort(cal_samples, CALIBRATE_SAMPLES, sizeof(uint32_t), compare_uint32);
-        
+
         // 打印排序后的结果，方便看中位数位置
         printf("[*] Sorted Samples: ");
         for(int i = 0; i < CALIBRATE_SAMPLES; i++) printf("%u ", cal_samples[i]);
         printf("\n");
 
         uint32_t fast_median = cal_samples[CALIBRATE_SAMPLES / 2];
-        // uint32_t threshold = fast_median + 40; 
-        threshold = fast_median + 40; 
+        // uint32_t threshold = fast_median + 40;
+        threshold = fast_median + 40;
         // 关键：输出一个特定的前缀，方便 Bash 脚本抓取
         printf("RESULT_THRESHOLD:%u\n", threshold);
     } else {
@@ -142,14 +149,27 @@ int main(int argc, char *argv[]) {
         printf("Round %02d: ", r + 1);
         for (int b = KEY_BITS-1; b >= 0; b--) {
             uint32_t lat = probe_once(b, secret_key, attacker_pages, victim_base, dummy_pages, 0);
-            
+
             int is_one = (lat > threshold) ? 1 : 0;
             vote_box[b] += is_one;
-            
+
             // 修改这里：打印格式为 "判定(原始延迟)"
-            printf("%d(%u) ", is_one, lat); 
+            printf("%d(%u) ", is_one, lat);
         }
         printf("\n");
+
+        // ==============================================================================
+        // ADD: 专门为 Python 解析准备的纯延迟数据行
+        // 格式为：LAT_DATA:[bit7_lat],[bit6_lat],...,[bit0_lat]
+        printf("LAT_DATA:");
+        for (int b = KEY_BITS - 1; b >= 0; b--) {
+            // 再次调用探测（仅用于为 Python 脚本收集特定格式的数据，不影响您的攻击逻辑）
+            uint32_t lat = probe_once(b, secret_key, attacker_pages, victim_base, dummy_pages, 0);
+            // 打印纯延迟，用逗号分隔，最后一位不加逗号
+            printf("%u%s", lat, (b == 0) ? "" : ",");
+        }
+        printf("\n"); // 这一行会被 Python 的 grep 抓取
+        // ==============================================================================
     }
 
     // --- 第三步：多数表决 ---
@@ -159,9 +179,9 @@ int main(int argc, char *argv[]) {
         // 如果该位在超过一半的轮次中被判定为 1
         int final_guess = (vote_box[b] > (NUM_ROUNDS / 2)) ? 1 : 0;
         if (final_guess) recovered |= (1 << b);
-        
-        printf("Bit %d | Votes: %2d/%2d | Final: %d | %s\n", 
-               b, vote_box[b], NUM_ROUNDS, final_guess, 
+
+        printf("Bit %d | Votes: %2d/%2d | Final: %d | %s\n",
+               b, vote_box[b], NUM_ROUNDS, final_guess,
                (final_guess == ((secret_key >> b) & 1) ? "OK" : "FAIL"));
     }
 
