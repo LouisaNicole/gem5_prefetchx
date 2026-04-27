@@ -89,14 +89,7 @@ int main(int argc, char *argv[]) {
         use_fixed_threshold = 1;
     }
 
-    uint8_t secret_key = 0xef; // 目标密钥
-        if (argc > 1) {
-        // 假设 Python 把 secret_key 作为第一个参数传入
-        // ./two_core_test <secret_key_hex>
-        secret_key = (uint8_t)strtol(argv[1], NULL, 16);
-    }
-    printf("Target Key: 0x%02x\n\n", secret_key);
-
+    uint8_t secret_key = 0x96;
     size_t mem_size = 4000 * PAGE_SIZE;
     char *buffer = (char *)aligned_alloc(PAGE_SIZE, mem_size);
     memset(buffer, 0x55, mem_size);
@@ -157,19 +150,6 @@ int main(int argc, char *argv[]) {
             printf("%d(%u) ", is_one, lat);
         }
         printf("\n");
-
-        // ==============================================================================
-        // ADD: 专门为 Python 解析准备的纯延迟数据行
-        // 格式为：LAT_DATA:[bit7_lat],[bit6_lat],...,[bit0_lat]
-        printf("LAT_DATA:");
-        for (int b = KEY_BITS - 1; b >= 0; b--) {
-            // 再次调用探测（仅用于为 Python 脚本收集特定格式的数据，不影响您的攻击逻辑）
-            uint32_t lat = probe_once(b, secret_key, attacker_pages, victim_base, dummy_pages, 0);
-            // 打印纯延迟，用逗号分隔，最后一位不加逗号
-            printf("%u%s", lat, (b == 0) ? "" : ",");
-        }
-        printf("\n"); // 这一行会被 Python 的 grep 抓取
-        // ==============================================================================
     }
 
     // --- 第三步：多数表决 ---

