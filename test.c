@@ -14,6 +14,10 @@
 #define NUM_ROUNDS 7    // 总共测 7 轮（奇数方便投票）
 #define CALIBRATE_SAMPLES 10 // 校准时采集的样本数
 
+#ifndef SECRET_KEY
+#define SECRET_KEY 0x03 // 默认值
+#endif
+
 static inline void clflush(volatile void *p) { asm volatile("clflush (%0)" :: "r"(p)); }
 static inline void mfence() { asm volatile("mfence" ::: "memory"); }
 static inline void lfence() { asm volatile("lfence" ::: "memory"); }
@@ -89,7 +93,7 @@ int main(int argc, char *argv[]) {
         use_fixed_threshold = 1;
     }
 
-    uint8_t secret_key = 0x96;
+    uint8_t secret_key = SECRET_KEY;
     size_t mem_size = 4000 * PAGE_SIZE;
     char *buffer = (char *)aligned_alloc(PAGE_SIZE, mem_size);
     memset(buffer, 0x55, mem_size);
@@ -130,7 +134,7 @@ int main(int argc, char *argv[]) {
 
         uint32_t fast_median = cal_samples[CALIBRATE_SAMPLES / 2];
         // uint32_t threshold = fast_median + 40;
-        threshold = fast_median + 40;
+        threshold = fast_median + 25;
         // 关键：输出一个特定的前缀，方便 Bash 脚本抓取
         printf("RESULT_THRESHOLD:%u\n", threshold);
     } else {
